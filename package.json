@@ -1,0 +1,32 @@
+{
+  "name": "documentdb-session",
+  "version": "0.1.0",
+  "description": "An express-session Store for Azure's DocumentDB NoSQL database service.",
+  "homepage": "https://github.com/dwhieb/documentdb-session#readme",
+  "author": {
+    "name": "Daniel W. Hieber",
+    "url": "http://danielhieber.com"
+  },
+  "keywords": [
+    "DocumentDB",
+    "express-session",
+    "Express",
+    "session",
+    "Azure"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dwhieb/documentdb-session/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dwhieb/documentdb-session.git"
+  },
+  "main": "documentdb-session.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "engines": {
+    "node": ">=6.4.0"
+  }
+}
