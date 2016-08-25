@@ -1,7 +1,9 @@
 # documentdb-session
+[![npm version](https://badge.fury.io/js/documentdb-session.svg)](https://badge.fury.io/js/documentdb-session)
 [![Build Status](https://travis-ci.org/dwhieb/documentdb-session.svg?branch=master)](https://travis-ci.org/dwhieb/documentdb-session)
 [![Dependencies Status](https://david-dm.org/dwhieb/documentdb-session.svg)](https://travis-ci.org/dwhieb/documentdb-session)
-[![npm version](https://badge.fury.io/js/documentdb-session.svg)](https://badge.fury.io/js/documentdb-session)
+[![GitHub issues](https://img.shields.io/github/issues/dwhieb/documentdb-session.svg)](https://github.com/dwhieb/documentdb-session/issues)
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/dwhieb/documentdb-session/master/LICENSE)
 
 An Azure DocumentDB store for `express-session`.
 
@@ -50,7 +52,7 @@ Option            | Default          | Description
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
 `host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`.
 `key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists.
-`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. **NB:** In order for automatic deletion to work, you must have the TTL setting turned on for the collection. If you do not, you will have to delete your sessions in some other way. *It is recommended that you enable TTL.* You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).
+`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. **NB:** `documentdb-session` only sets the `ttl` attribute on individual documents, not the entire collection. In order for automatic deletion to work, you must have the TTL setting turned on for the collection. If you do not, you will have to delete your sessions in some other way. *It is recommended that you enable TTL.* If you enable TTL and set a default TTL for the collection level, it is not necessary to set the `ttl` property here, since DocumentDB will automatically delete documents. But if you only want your session documents to have a TTL (and not all the documents in the collection), you should turn on TTL for the collection without setting a default, and include your desired TTL time in the `ttl` property here. This will delete your sessions when they expire, but not other documents in the collection. You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).
 
 **NB:** If you'd like to more fully customize the settings for the collection where your session data is stored (e.g. the connection policy and consistency level), you can create the collection in advance, and simply provide the ID of that collection in the `collection` config parameter. `documentdb-session` will then use that collection's settings.
 

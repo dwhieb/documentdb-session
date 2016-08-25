@@ -2,29 +2,55 @@ const documentdb = require('documentdb');
 const EventEmitter = require('events');
 
 const defaults = {
-  database: 'sessionstore',
   collection: 'sessions',
+  database: 'sessionstore',
+  discriminator: { type: 'session' },
 };
 
 class DocumentDBStore extends EventEmitter {
   constructor(config = {}) {
     super();
 
-    const { host, key, database, collection, ttl } = config;
-
-    this.client = new documentdb.DocumentClient(config.host, { masterKey: config.key });
+    const { collection, database, discriminator, host, key, ttl } = config;
 
     this.config = {
       collection,
       database,
+      discriminator,
       host,
       key,
       ttl,
     };
 
+    this.discriminator = this.config.discriminator || defaults.discriminator;
+    this.filterOn = Object.keys(this.discriminator)[0];
+    this.filterValue = this.discriminator[this.filterOn];
+
+    this.client = new documentdb.DocumentClient(this.config.host, { masterKey: this.config.key });
+
   }
 
-  all(cb) {}
+  all(cb) {
+
+    const querySpec = {
+      query: 'SELECT * FROM d WHERE d[@attr] = @value',
+      parameters: [
+        {
+          name: '@attr',
+          value: this.filterOn,
+        },
+        {
+          name: '@value',
+          value: this.filterValue,
+        },
+      ],
+    };
+
+    this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, res) => {
+      if (err) return cb(err);
+      return cb(null, res);
+    });
+  }
 
   clear(cb) {}
 
@@ -35,7 +61,7 @@ class DocumentDBStore extends EventEmitter {
 
       const body = {
         id: collectionId,
-        defaultTtl: this.config.ttl,
+        defaultTtl: -1,
       };
 
       this.client.createCollection(this.databaseLink, body, err => {
@@ -121,10 +147,26 @@ class DocumentDBStore extends EventEmitter {
 
   }
 
-  set(sid, session, cb) {}
+  set(sid, session, cb) {
+
+    if (sid !== session.id) {
+      return cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.'));
+    }
+
+    const opts = { disableAutomaticIdGeneration: true };
+
+    const doc = Object.assign({}, session);
+    if (this.config.ttl) doc.ttl = this.config.ttl;
+
+    this.makeDatabaseRequest(this.client.upsertDocument, this.collectionLink, doc, opts, err => {
+      if (err) return cb(err);
+      return cb();
+    });
+
+  }
 
   touch(sid, session, cb) {}
-  
+
 }
 
 // TODO: return a Proxy on DocumentDBStore rather than the class itself
