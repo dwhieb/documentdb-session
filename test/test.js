@@ -18,7 +18,7 @@ describe('DocumentDBStore', function spec() {
     db.deleteDatabase(databaseLink, err => {
 
       if (err && err.code != 404) {
-        throw new Error('Could not delete database.');
+        throw new Error('Could not delete database before tests.');
       }
 
       const store = new DocumentDBStore({
@@ -36,7 +36,10 @@ describe('DocumentDBStore', function spec() {
   });
 
   afterAll(function afterTest(done) {
-    // delete the test database
+    db.deleteDatabase(databaseLink, err => {
+      if (err) throw new Error('Could not delete database after tests.');
+      done();
+    });
   });
 
   it('creates a database', function createDatabase(done) {
