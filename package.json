@@ -8,11 +8,11 @@
     "url": "http://danielhieber.com"
   },
   "keywords": [
-    "DocumentDB",
+    "documentdb",
     "express-session",
-    "Express",
+    "express",
     "session",
-    "Azure"
+    "azure"
   ],
   "license": "MIT",
   "bugs": {
@@ -24,9 +24,12 @@
   },
   "main": "documentdb-session.js",
   "scripts": {
-    "test": "npm test"
+    "test": "jasmine JASMINE_CONFIG_PATH=test/jasmine.json"
   },
   "engines": {
     "node": ">=6.4.0"
+  },
+  "dependencies": {
+    "documentdb": "^1.9.0"
   }
 }
