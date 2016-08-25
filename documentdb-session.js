@@ -24,6 +24,10 @@ class DocumentDBStore extends EventEmitter {
 
   }
 
+  all(cb) {}
+
+  clear(cb) {}
+
   createCollection() {
     return new Promise((resolve, reject) => {
 
@@ -75,6 +79,12 @@ class DocumentDBStore extends EventEmitter {
     });
   }
 
+  destroy(sid, cb) {}
+
+  genid() {}
+
+  get(sid, cb) {}
+
   initialize(cb) {
 
     const databaseId = this.config.database || defaults.database;
@@ -86,6 +96,8 @@ class DocumentDBStore extends EventEmitter {
     });
 
   }
+
+  length() {}
 
   makeDatabaseRequest(dbFunction, ...args) {
 
@@ -108,6 +120,11 @@ class DocumentDBStore extends EventEmitter {
     }
 
   }
+
+  set(sid, session, cb) {}
+
+  touch(sid, session, cb) {}
+  
 }
 
 // TODO: return a Proxy on DocumentDBStore rather than the class itself
