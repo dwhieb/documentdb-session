@@ -31,5 +31,8 @@
   },
   "dependencies": {
     "documentdb": "^1.9.0"
+  },
+  "devDependencies": {
+    "jasmine": "^2.4.1"
   }
 }
