@@ -227,7 +227,7 @@ describe('DocumentDBStore', function spec() {
 
     db.readDocument(documentLink, (err, res) => {
       if (err) fail(err);
-      expect(res.id).toBe(id);
+      if (res) expect(res.id).toBe(id);
       done();
     });
 
