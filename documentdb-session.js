@@ -15,10 +15,10 @@ class DocumentDBStore extends EventEmitter {
     this.client = new documentdb.DocumentClient(config.host, { masterKey: config.key });
 
     this.config = {
+      collection,
+      database,
       host,
       key,
-      database,
-      collection,
       ttl,
     };
 

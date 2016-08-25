@@ -35,6 +35,10 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
+  afterAll(function afterTest(done) {
+    // delete the test database
+  });
+
   it('creates a database', function createDatabase(done) {
     db.readDatabase(databaseLink, (err, res) => {
       if (err) fail(err);
