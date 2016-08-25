@@ -75,28 +75,38 @@ class DocumentDBStore extends EventEmitter {
     });
   }
 
-  makeDatabaseRequest(dbFunction, ...args) {
-    return new Promise((resolve, reject) => {
+  initialize(cb) {
 
-      if (!this.database) {
+    const databaseId = this.config.database || defaults.database;
+    const databaseLink = `dbs/${databaseId}`;
 
-        this.createDatabase()
-        .then(() => this.makeDatabaseRequest(dbFunction, ...args))
-        .catch(reject);
-
-      } else if (!this.collection) {
-
-        this.createCollection()
-        .then(() => this.makeDatabaseRequest(dbFunction, ...args))
-        .catch(reject);
-
-      } else {
-
-        resolve(dbFunction.apply(this.client, args));
-
-      }
-
+    this.makeDatabaseRequest(this.client.readDatabase, databaseLink, (err, res) => {
+      if (err) return cb(err);
+      cb(null, res);
     });
+
+  }
+
+  makeDatabaseRequest(dbFunction, ...args) {
+
+    if (!this.database) {
+
+      this.createDatabase()
+      .then(() => this.makeDatabaseRequest(dbFunction, ...args))
+      .catch(err => { throw new Error(err); });
+
+    } else if (!this.collection) {
+
+      this.createCollection()
+      .then(() => this.makeDatabaseRequest(dbFunction, ...args))
+      .catch(err => { throw new Error(err); });
+
+    } else {
+
+      return dbFunction.apply(this.client, args);
+
+    }
+
   }
 }
 
