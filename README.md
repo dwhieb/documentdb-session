@@ -21,7 +21,7 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 
 * Provides an optional `.genid()` method that makes the document ID the same as the session ID. This makes it easy to look up sessions in your database, and helps with debugging.
 
-* Provides an optional `.initialize()` method if you'd like to initialize your database and collection before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
+* Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
 ## Install
 ```
@@ -52,9 +52,17 @@ Option            | Default          | Description
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
 `host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`.
 `key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists.
-`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. **NB:** `documentdb-session` only sets the `ttl` attribute on individual documents, not the entire collection. In order for automatic deletion to work, you must have the TTL setting turned on for the collection. If you do not, you will have to delete your sessions in some other way. *It is recommended that you enable TTL.* If you enable TTL and set a default TTL for the collection level, it is not necessary to set the `ttl` property here, since DocumentDB will automatically delete documents. But if you only want your session documents to have a TTL (and not all the documents in the collection), you should turn on TTL for the collection without setting a default, and include your desired TTL time in the `ttl` property here. This will delete your sessions when they expire, but not other documents in the collection. You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).
+`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on **Configuring TTL** below.
 
 **NB:** If you'd like to more fully customize the settings for the collection where your session data is stored (e.g. the connection policy and consistency level), you can create the collection in advance, and simply provide the ID of that collection in the `collection` config parameter. `documentdb-session` will then use that collection's settings.
+
+### Configuring TTL (Time-to-Live or Expiration Time)
+Because sessions are generally short-lived, and because your application will be creating new sessions frequently, it is a good idea to automatically delete sessions once they have been inactive for a certain period of time. That period of time is the *time-to-live* or *TTL* for a session, and typically you will want this value to be the same as the `maxAge` value of the session cookie. There are two recommended strategies for using TTL with sessions:
+
+**1. Set a default TTL for the entire collection**
+Choose this option if sessions are the only type of document in your collection.
+
+`documentdb-session` only sets the `ttl` attribute on individual documents, not the entire collection. In order for automatic deletion to work, you must have the TTL setting turned on for the collection. If you do not, you will have to delete your sessions in some other way. *It is recommended that you enable TTL.* If you enable TTL and set a default TTL for the collection level, it is not necessary to set the `ttl` property here, since DocumentDB will automatically delete documents. But if you only want your session documents to have a TTL (and not all the documents in the collection), you should turn on TTL for the collection without setting a default, and include your desired TTL time in the `ttl` property here. This will delete your sessions when they expire, but not other documents in the collection. You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).
 
 ### Working with Partitioned Collections
 If you use partitioned collections, you can enable partitioning in the same way that you would enable it using the [DocumentDB Node.js SDK](https://github.com/Azure/azure-documentdb-node). The session store instance exposes the DocumentDB SDK's [DocumentClient](http://azure.github.io/azure-documentdb-node/DocumentClient.html) object (as `.client`), which you can use to register your partition resolver. A short example is below, and you can see a more complete example of using partition resolver [here](https://github.com/Azure/azure-documentdb-node/blob/master/samples/Partitioning/app.js).
@@ -98,7 +106,7 @@ Retrieves all sessions from the collection, by filtering on the session discrimi
 `callback(err, sessions = [])`
 
 ### .clear(cb)
-Deletes all sessions from the collection. Callback is fired once the collection is cleared of all sessions. Other documents in the collection that are not sessions are not affected.
+Deletes all sessions from the collection. Callback is fired once the collection is cleared of all sessions. Other documents in the collection that are not sessions are not affected. This operation uses a stored procedure called `clear`, which is uploaded to the collection on initialization.
 
 `callback(err)`
 
@@ -116,11 +124,9 @@ Retrieves a session from the collection using the given session ID (`sid`). The 
 `callback(err, session)`
 
 ### .initialize(cb)
-Normally, `documentdb-session` will check for a DocumentDB database and collection the first time a request to the database is made, and will create them if they do not exist. However, if you would like to initialize the database before you start making database calls, you can do so by calling `.initialize()`. This is useful if you want your application to check for database configuration errors before attempting to write sessions, and for testing.
+Normally, `documentdb-session` will check for a DocumentDB database and collection the first time a request to the database is made, and will create them if they do not exist. It will also upload a few stored procedures to the collection. If you would like to initialize the database before you start making database calls, you can do so by calling `.initialize()`. This is useful if you want your application to check for database configuration errors before attempting to write sessions, and for testing.
 
-The callback function takes two arguments:
-* `err`: Present if an error occurs during initialization.
-* `db`: Details about the database being used to store session data.
+`callback(err)`
 
 **Example**
 
@@ -139,7 +145,7 @@ store.initialize((err, db) => {
 ```
 
 ### .length(cb)
-Retrieves a count of the number of sessions in the collection, filtering on the session discriminator (usually `"type": "session"`).
+Retrieves a count of the number of sessions in the collection, filtering on the session discriminator (usually `"type": "session"`). This operation uses a stored procedure called `length`, which is uploaded to the collection on initialization.
 
 `callback(err, len)`
 
@@ -149,7 +155,7 @@ Upserts the session into the collection given a session ID (`sid`) and session o
 `callback(err)`
 
 ### .touch(sid, session, cb)
-Resets the TTL (time-to-live) for the session (see the `ttl` config option above). The callback fires onces the document has been updated.
+Resets the TTL (time-to-live) for the session (see the `ttl` config option above). The callback fires onces the document has been updated. This operation uses a stored procedure called `touch`, which is uploaded to the collection on initialization.
 
 `callback(err)`
 
