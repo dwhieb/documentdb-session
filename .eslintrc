@@ -47,7 +47,7 @@
     "eqeqeq": ["warn", "always"],
     "eol-last": "error",
     "func-names": ["error", "always"],
-    "func-style": ["error", "expression", { "allowArrowFunctions": true }],
+    "func-style": ["warn", "expression", { "allowArrowFunctions": true }],
     "generator-star-spacing": ["error", { "before": false, "after": true }],
     "global-require": "warn",
     "guard-for-in": "warn",
@@ -76,7 +76,7 @@
       "allowArrayEnd": false
     }],
     "max-depth": "warn",
-    "max-len": ["warn", { "code": 100, "ignoreUrls": true, "comments": 200 }],
+    "max-len": ["warn", { "code": 100, "ignoreUrls": true, "comments": 200, "ignoreComments": true }],
     "max-lines": "off",
     "max-nested-callbacks": ["warn", 2],
     "max-params": ["warn", 4],

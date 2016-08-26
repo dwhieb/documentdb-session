@@ -32,9 +32,18 @@ class DocumentDBStore extends EventEmitter {
     this.filterValue = this.discriminator[this.filterOn];
 
     this.sprocs = {
-      clear: require('./sprocs/clear'),
-      length: require('./sprocs/length'),
-      touch: require('./sprocs/touch'),
+      clear: {
+        id: 'clear',
+        serverScript: require('./sprocs/clear'),
+      },
+      length: {
+        id: 'length',
+        serverScript: require('./sprocs/length'),
+      },
+      touch: {
+        id: 'touch',
+        serverScript: require('./sprocs/touch'),
+      },
     };
 
     this.client = new documentdb.DocumentClient(this.host, { masterKey: this.key });
