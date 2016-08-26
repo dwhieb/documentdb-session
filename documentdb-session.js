@@ -65,11 +65,9 @@ class DocumentDBStore extends EventEmitter {
   }
 
   clear(cb = defaultCallback) {
-    this.all((err, sessions) => {
-      if (err) cb(err);
-
-      this.client.executeStoredProcedure();
-
+    this.client.executeStoredProcedure(this.sprocs.clear.link, err => {
+      if (err) return cb(err);
+      return cb();
     });
   }
 
@@ -118,36 +116,42 @@ class DocumentDBStore extends EventEmitter {
 
   initialize(cb = defaultCallback) {
 
+    if (!this.host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
+
+    if (!this.key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
+
     if (!init.database) {
 
       this.createDatabase()
       .then(() => {
         init.database = true;
-        this.initialize();
+        this.initialize(cb);
       })
-      .catch(cb);
+      .catch(err => cb(err));
 
     } else if (!init.collection) {
 
       this.createCollection()
       .then(() => {
         init.collection = true;
-        this.initialize();
+        this.initialize(cb);
       })
-      .catch(cb);
+      .catch(err => cb(err));
 
     } else if (!init.sprocs) {
 
       this.uploadSprocs()
       .then(() => {
         init.sprocs = true;
-        this.initialize();
+        this.initialize(cb);
       })
-      .catch(cb);
+      .catch(err => cb(err));
+
+    } else {
+
+      return cb();
 
     }
-
-    return cb();
 
   }
 
@@ -191,6 +195,7 @@ class DocumentDBStore extends EventEmitter {
     const uploadSproc = sproc => new Promise((resolve, reject) => {
       this.client.upsertStoredProcedure(this.collectionLink, this.sprocs[sproc.id], err => {
         if (err) reject(err);
+        this.sprocs[sproc.id].link = `${this.collectionLink}/sprocs/${sproc.id}`;
         resolve();
       });
     });
@@ -213,9 +218,3 @@ class DocumentDBStore extends EventEmitter {
 // - include validation of config object (`host` and `key` required)
 // - make certain fields read-only
 module.exports = DocumentDBStore;
-
-const store = new DocumentDBStore({ ttl: 15 });
-
-store.initialize(err => {
-  if (err) console.error('End of code:', err);
-});

@@ -23,6 +23,10 @@ describe('DocumentDBStore', function spec() {
   // Also tests .initialize()
   beforeAll(function beforeTest(done) {
 
+    if (!host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
+
+    if (!key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
+
     this.store = new DocumentDBStore({
       host,
       key,
@@ -100,6 +104,7 @@ describe('DocumentDBStore', function spec() {
       id: 'expire-test',
       cookie: {},
       data: 'session data',
+      type: 'session',
     };
 
     this.store.set(session.id, session, err => {
@@ -160,11 +165,13 @@ describe('DocumentDBStore', function spec() {
     const session1 = {
       id: 'clear-session-1',
       ttl: 15,
+      type: 'session',
     };
 
     const session2 = {
       id: 'clear-session-2',
       ttl: 15,
+      type: 'session',
     };
 
     db.upsertDocument(collectionLink, session1, err => {
@@ -201,6 +208,7 @@ describe('DocumentDBStore', function spec() {
       cookie: {},
       data: 'session data',
       ttl: 300,
+      type: 'session',
     };
 
     db.upsertDocument(collectionLink, session, err => {
@@ -246,6 +254,7 @@ describe('DocumentDBStore', function spec() {
       cookie: {},
       data: 'session data',
       ttl: 300,
+      type: 'session',
     };
 
     db.upsertDocument(collectionLink, session, err => {
@@ -275,6 +284,7 @@ describe('DocumentDBStore', function spec() {
       id: 'set-session',
       data: 'session data',
       cookie: {},
+      type: 'session',
     };
 
     this.store.set(session.id, session, err => {
@@ -298,6 +308,7 @@ describe('DocumentDBStore', function spec() {
       cookie: {},
       data: 'session data',
       ttl: 300,
+      type: 'session',
     };
 
     db.upsertDocument(collectionLink, session, (err, res) => {
