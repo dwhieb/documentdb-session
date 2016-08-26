@@ -50,9 +50,9 @@ Option            | Default          | Description
 `collection`      | `"sessions"` | The ID of the collection where the session data should be stored. If the collection does not exist, it will be created when the session store initializes. The collection may contain other data, or it may be a dedicated collection just for sessions.
 `database`        | `"sessionstore"` | The ID of the database where the session data should be stored. If the database does not exist, it will be creaed when the session store initializes.
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
-`host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`.
-`key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists.
-`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on **Configuring TTL** below.
+`host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`. You can also provide this in an environment variable, (`DOCUMENTDB_URL`) instead.
+`key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists. You can also provide this in an environment variable (`DOCUMENTDB_KEY`) instead.
+`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on **Configuring TTL** below. *Enabling TTL is strongly recommended.*
 
 **NB:** If you'd like to more fully customize the settings for the collection where your session data is stored (e.g. the connection policy and consistency level), you can create the collection in advance, and simply provide the ID of that collection in the `collection` config parameter. `documentdb-session` will then use that collection's settings.
 
@@ -61,12 +61,24 @@ Because sessions are generally short-lived, and because your application will be
 
 **1. Set a default TTL for the entire collection**
 
-Choose this option if sessions are the only type of document in your collection.
+Choose this option if sessions are the only type of document in your collection. This will automatically delete every document in the collection once it has been inactive (not changed or updated) for the time specified by the TTL. If you choose this option, you do not need to set the `ttl` config property in `documentdb-session`.
 
-`documentdb-session` only sets the `ttl` attribute on individual documents, not the entire collection. In order for automatic deletion to work, you must have the TTL setting turned on for the collection. If you do not, you will have to delete your sessions in some other way. *It is recommended that you enable TTL.* If you enable TTL and set a default TTL for the collection level, it is not necessary to set the `ttl` property here, since DocumentDB will automatically delete documents. But if you only want your session documents to have a TTL (and not all the documents in the collection), you should turn on TTL for the collection without setting a default, and include your desired TTL time in the `ttl` property here. This will delete your sessions when they expire, but not other documents in the collection. You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).
+**Important:** *If you have other, non-session data in your collection, do **not** set a default TTL for the collection, or ALL your documents will be deleted once they expire.*
+
+You can set a default TTL for the collection either by calling the `.replaceCollection()` method of the DocumentDB Node.js SDK and including an attribute `"defaultTtl": {your TTL, in seconds}`, or by going to the Settings blade for the collection in the [Azure Portal](https://portal.azure.com/) and choosing `On` and providing a default value.
+
+**2. Only set a TTL for session documents**
+
+Choose this option if you will be storing other kinds of data besides just sessions in your collection. With this option, each session document will be given a `ttl` attribute with the value you specify in the `documentdb-session` config object (see above). The session documents will be deleted after they expire, but not the other documents in your collection (unless they also have a `ttl` property on them).
+
+To configure TTL for session documents, include a value for `ttl` in the `documentdb-session` config object, and make sure that your collection has TTL enabled, but without a default expiration time. `documentdb-session` will not enable TTL on the collection unless it creates the collection during initialization; if you created your own collection, you will need to enable TTL manually.
+
+To enable TTL without a default expiration, either call the `.replaceCollection()` method of the DocumentDB Node.js SDK and include an attribute `"defaultTtl": -1`, or go to the Settings blade for the collection in the [Azure Portal](https://portal.azure.com/) and select `On (no default)`.
+
+(You can read more about DocumentDB's TTL feature [here](https://azure.microsoft.com/en-us/documentation/articles/documentdb-time-to-live/).)
 
 ### Working with Partitioned Collections
-If you use partitioned collections, you can enable partitioning in the same way that you would enable it using the [DocumentDB Node.js SDK](https://github.com/Azure/azure-documentdb-node). The session store instance exposes the DocumentDB SDK's [DocumentClient](http://azure.github.io/azure-documentdb-node/DocumentClient.html) object (as `.client`), which you can use to register your partition resolver. A short example is below, and you can see a more complete example of using partition resolver [here](https://github.com/Azure/azure-documentdb-node/blob/master/samples/Partitioning/app.js).
+If you use partitioned collections, you can enable partitioning in the same way that you would enable it using the [DocumentDB Node.js SDK](https://github.com/Azure/azure-documentdb-node). The session store instance exposes the DocumentDB SDK's [DocumentClient](http://azure.github.io/azure-documentdb-node/DocumentClient.html) object (as `.client`), which you can use to register your partition resolver. A short example is below, and you can see a more complete example of using a partition resolver [here](https://github.com/Azure/azure-documentdb-node/blob/master/samples/Partitioning/app.js).
 
 ```
 const documentdb = require('documentdb');
