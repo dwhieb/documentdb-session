@@ -34,7 +34,7 @@ describe('DocumentDBStore', function spec() {
     });
 
     this.store.initialize(err => {
-      if (err) throw new Error('Could not initialize database.');
+      if (err) fail(err.message);
       done();
     });
 
@@ -47,8 +47,7 @@ describe('DocumentDBStore', function spec() {
     db.deleteDatabase(databaseLink, err => {
 
       if (err && err.code != 404) {
-        console.log(err, err.stack);
-        throw new Error('Could not delete database before tests.');
+        fail(err.message);
       }
 
       this.store = new DocumentDBStore({
@@ -58,7 +57,7 @@ describe('DocumentDBStore', function spec() {
       });
 
       this.store.initialize(err => {
-        if (err) throw new Error('Could not initialize database.');
+        if (err) fail(err.message);
         done();
       });
 
@@ -69,34 +68,33 @@ describe('DocumentDBStore', function spec() {
   /*
   afterAll(function afterTest(done) {
     db.deleteDatabase(databaseLink, err => {
-      if (err) throw new Error('Could not delete database after tests.');
+      if (err) fail(err.message);
       done();
     });
   });
   */
 
-  xit('.initialize()', function initialize(done) {
+  it('.initialize()', function initialize(done) {
     expect(this.store.client).toBeDefined();
     expect(this.store.database).toBe(database);
     done();
   });
 
-  xit('creates a database', function createDatabase(done) {
+  it('creates a database', function createDatabase(done) {
     db.readDatabase(databaseLink, (err, res) => {
-      if (err) fail(err);
+      if (err) fail(err.body);
       expect(res.id).toBe(database);
       done();
     });
   });
 
-  xit('creates a collection', function createCollection(done) {
+  it('creates a collection', function createCollection(done) {
     db.readCollection(collectionLink, (err, res) => {
-      if (err) fail(err);
+      if (err) fail(err.body);
       expect(res.id).toBe(collection);
       done();
     });
   });
-
 
   xit('expires documents', function expireDocuments(done) {
 
@@ -108,7 +106,7 @@ describe('DocumentDBStore', function spec() {
     };
 
     this.store.set(session.id, session, err => {
-      if (err) fail(err);
+      if (err) fail(err.message);
 
       setTimeout(() => {
         const documentLink = `${collectionLink}/docs/${session.id}`;
@@ -116,8 +114,12 @@ describe('DocumentDBStore', function spec() {
         db.readDocument(documentLink, (err, res) => {
           if (err && err.code == 404) {
             done();
+          } else if (res) {
+            fail(JSON.stringify(res));
+          } else if (err) {
+            fail(err.body);
           } else {
-            fail(err || res);
+            fail('Could not read document during expire test.');
           }
         });
       }, 16000);
@@ -126,7 +128,7 @@ describe('DocumentDBStore', function spec() {
 
   }, 20000);
 
-  xit('.all()', function all(done) {
+  it('.all()', function all(done) {
 
     const session1 = {
       id: 'all-session-1',
@@ -141,12 +143,12 @@ describe('DocumentDBStore', function spec() {
     };
 
     db.upsertDocument(collectionLink, session1, err => {
-      if (err) fail(err);
+      if (err) fail(err.body);
       db.upsertDocument(collectionLink, session2, err => {
-        if (err) fail(err);
+        if (err) fail(err.body);
 
         this.store.all((err, sessions) => {
-          if (err) fail(err);
+          if (err) fail(err.message);
           expect(sessions instanceof Array).toBe(true);
           expect(sessions.length >= 2).toBe(true);
           const ids = sessions.map(session => session.id);
@@ -175,12 +177,12 @@ describe('DocumentDBStore', function spec() {
     };
 
     db.upsertDocument(collectionLink, session1, err => {
-      if (err) fail(err);
+      if (err) fail(err.body);
       db.upsertDocument(collectionLink, session2, err => {
-        if (err) fail(err);
+        if (err) fail(err.body);
 
         this.store.clear(err => {
-          if (err) fail(err);
+          if (err) fail(err.message);
 
           const query = `
             SELECT * FROM d
@@ -188,7 +190,7 @@ describe('DocumentDBStore', function spec() {
           `;
 
           db.queryDocuments(collectionLink, query).toArray((err, res) => {
-            if (err) fail(err);
+            if (err) fail(err.body);
             expect(res instanceof Array).toBe(true);
             expect(res.length).toBe(0);
             done();
@@ -212,18 +214,20 @@ describe('DocumentDBStore', function spec() {
     };
 
     db.upsertDocument(collectionLink, session, err => {
-      if (err) fail(err);
+      if (err) fail(err.body);
 
       this.store.destroy(session.id, err => {
-        if (err) fail(err);
+        if (err) fail(err.message);
 
         const documentLink = `${collectionLink}/docs/${session.id}`;
 
         db.readDocument(documentLink, err => {
           if (err && err.code == 404) {
             done();
+          } else if (err) {
+            fail(err.body);
           } else {
-            fail(err);
+            fail('Document was found after .destroy().');
           }
         });
 
@@ -240,7 +244,7 @@ describe('DocumentDBStore', function spec() {
     const documentLink = `${collectionLink}/docs/${id}`;
 
     db.readDocument(documentLink, (err, res) => {
-      if (err) fail(err);
+      if (err) fail(err.body);
       if (res) expect(res.id).toBe(id);
       done();
     });
@@ -258,10 +262,10 @@ describe('DocumentDBStore', function spec() {
     };
 
     db.upsertDocument(collectionLink, session, err => {
-      if (err) fail(err);
+      if (err) fail(err.body);
 
       this.store.get(session.id, (err, sess) => {
-        if (err) fail(err);
+        if (err) fail(err.message);
         expect(sess.id).toBe(session.id);
         done();
       });
@@ -272,7 +276,7 @@ describe('DocumentDBStore', function spec() {
 
   xit('.length()', function length(done) {
     this.store.length((err, length) => {
-      if (err) fail(err);
+      if (err) fail(err.message);
       expect(typeof length).toBe('number');
       done();
     });
@@ -288,12 +292,12 @@ describe('DocumentDBStore', function spec() {
     };
 
     this.store.set(session.id, session, err => {
-      if (err) fail(err);
+      if (err) fail(err.message);
 
       const documentLink = `${collectionLink}/docs/${session.id}`;
 
       db.readDocument(documentLink, (err, res) => {
-        if (err) fail(err);
+        if (err) fail(err.body);
         expect(res.id).toBe(session.id);
         done();
       });
@@ -312,19 +316,19 @@ describe('DocumentDBStore', function spec() {
     };
 
     db.upsertDocument(collectionLink, session, (err, res) => {
-      if (err) fail(err);
+      if (err) fail(err.body);
 
       const originalTimestamp = res._ts;
 
       setTimeout(() => {
 
         this.store.touch(session.id, session, err => {
-          if (err) fail(err);
+          if (err) fail(err.message);
 
           const documentLink = `${collectionLink}/docs/${session.id}`;
 
           db.readDocument(documentLink, (err, res) => {
-            if (err) fail(err);
+            if (err) fail(err.body);
             expect(res._ts).toBeGreaterThan(originalTimestamp);
             done();
           });

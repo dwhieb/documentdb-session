@@ -1,9 +1,6 @@
-module.exports = {
 
-  id: 'length',
+function length() {
 
-  serverScript: function length() {
+}
 
-  },
-
-};
+module.exports = length;

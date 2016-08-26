@@ -17,7 +17,7 @@ const init = {
 };
 
 const defaultCallback = err => {
-  if (err) console.error(err, err.stack);
+  if (err) console.error(err.message, err.stack);
 };
 
 class DocumentDBStore extends EventEmitter {
@@ -66,16 +66,17 @@ class DocumentDBStore extends EventEmitter {
       ],
     };
 
-    this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, res) => {
-      if (err) return cb(err);
-      return cb(null, res);
+    this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, sessions) => {
+      if (err) return cb(new Error(`Error querying documents: ${err.body}`));
+      return cb(null, sessions);
     });
 
   }
 
   clear(cb = defaultCallback) {
-    this.client.executeStoredProcedure(this.sprocs.clear.link, err => {
-      if (err) return cb(err);
+    this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
+      if (err) return cb(new Error(`Error executing stored procedure: ${err.body}`));
+      if (res.continuation) return this.clear(cb);
       return cb();
     });
   }
@@ -92,7 +93,7 @@ class DocumentDBStore extends EventEmitter {
 
       this.client.createCollection(this.databaseLink, body, err => {
         if (err && err.code != 409) {
-          reject(`There was a problem creating the "sessions" collection. Details: ${err}`);
+          reject(new Error(`Error creating the "${this.collection}" collection: ${err.body}`));
         } else {
           resolve();
         }
@@ -108,7 +109,7 @@ class DocumentDBStore extends EventEmitter {
 
       this.client.createDatabase({ id: databaseId }, err => {
         if (err && err.code != 409) {
-          reject(`There was a problem creating the session store database. Details: ${err}`);
+          reject(new Error(`Error creating the "${this.database}" database: ${err.body}`));
         } else {
           resolve();
         }
@@ -168,12 +169,18 @@ class DocumentDBStore extends EventEmitter {
 
   makeDatabaseRequest(dbFunction, ...args) {
 
+    const cb = args[args.length - 1]; // do not use .pop() here, or the cb won't get passed on
+
+    if (typeof cb !== 'function') {
+      throw new Error(`Callback parameter is undefined for the function "${dbFunction.name}".`);
+    }
+
     if (this.isInitialized) {
       return dbFunction.apply(this.client, args);
     }
 
     this.initialize(err => {
-      if (err) throw new Error(err);
+      if (err) return cb(err);
       return dbFunction.apply(this.client, args);
     });
 
@@ -191,7 +198,7 @@ class DocumentDBStore extends EventEmitter {
     if (this.ttl) doc.ttl = this.ttl;
 
     this.makeDatabaseRequest(this.client.upsertDocument, this.collectionLink, doc, opts, err => {
-      if (err) return cb(err);
+      if (err) return cb(new Error(`Error upserting session data to database: ${err.body}`));
       return cb();
     });
 
@@ -203,7 +210,7 @@ class DocumentDBStore extends EventEmitter {
 
     const uploadSproc = sproc => new Promise((resolve, reject) => {
       this.client.upsertStoredProcedure(this.collectionLink, this.sprocs[sproc.id], err => {
-        if (err) reject(err);
+        if (err) reject(new Error(`Error upserting stored procedure: ${err.body}`));
         this.sprocs[sproc.id].link = `${this.collectionLink}/sprocs/${sproc.id}`;
         resolve();
       });
@@ -226,4 +233,5 @@ class DocumentDBStore extends EventEmitter {
 // (or some other way to hide certain private methods and variables)
 // - include validation of config object (`host` and `key` required)
 // - make certain fields read-only
+// - use Proxy instead of .makeDatabaseRequest to check for initialization?
 module.exports = DocumentDBStore;

@@ -1,9 +1,5 @@
-module.exports = {
+function touch() {
 
-  id: 'touch',
+}
 
-  serverScript: function touch() {
-
-  },
-
-};
+module.exports = touch;
