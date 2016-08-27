@@ -36,7 +36,8 @@ const session = require('express-session');
 
 const config = {
   host: `https://mydbaccount.documents.azure.com:443/`,
-  key:  '8idtLLsiRJsKvgHLi...vgOJ9YXTTYK61LX15pobbmQ=='
+  key:  '8idtLLsiRJsKvgHLi...vgOJ9YXTTYK61LX15pobbmQ==',
+  ttl:  28800 // 8 hours
 };
 
 const app = express();
@@ -102,7 +103,16 @@ store.client.partitionResolvers[databaseLink] = resolver;
 ```
 
 ## Making the Document ID Match the Session ID
-TODO (.genid)
+`express-session` allows you to pass it a [.genid()](https://github.com/expressjs/session#genid) function that generates a string for use as the session ID. If you would like the IDs of your DocumentDB documents to be the same as your session IDs (useful for debugging and looking up sessions), `documentdb-session` provides a `.genid()` method that you can pass to `express-session`.
+
+```
+const store = new DocumentDBStore(config);
+
+app.use(session({
+  store: store,
+  genid: store.genid
+}));
+```
 
 ## API
 `documentdb-session` follows the [specification for session stores](https://github.com/expressjs/session#session-store-implementation) given by `express-session`. It includes all required, recommended, and optional methods, as well as a few extra convenience methods.

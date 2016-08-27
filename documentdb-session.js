@@ -66,19 +66,39 @@ class DocumentDBStore extends EventEmitter {
       ],
     };
 
-    this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, sessions) => {
-      if (err) return cb(new Error(`Error querying documents: ${err.body}`));
-      return cb(null, sessions);
+    const queryDocuments = () => {
+      return this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, sessions) => {
+        if (err) return cb(new Error(`Errory querying documents: ${err.body}`));
+        return cb(null, sessions);
+      });
+    };
+
+    if (this.initialized) return queryDocuments();
+
+    this.initialize(err => {
+      if (err) return cb(err);
+      return queryDocuments();
     });
 
   }
 
   clear(cb = defaultCallback) {
-    this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
-      if (err) return cb(new Error(`Error executing stored procedure: ${err.body}`));
-      if (res.continuation) return this.clear(cb);
-      return cb();
+
+    const executeStoredProcedure = () => {
+      return this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
+        if (err) return cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
+        if (res.continuation) return this.clear(cb);
+        return cb();
+      });
+    };
+
+    if (this.initialized) return executeStoredProcedure();
+
+    this.initialize(err => {
+      if (err) return cb(err);
+      return executeStoredProcedure();
     });
+
   }
 
   createCollection() {
@@ -118,9 +138,25 @@ class DocumentDBStore extends EventEmitter {
     });
   }
 
-  destroy(sid, cb = defaultCallback) {}
+  destroy(sid, cb = defaultCallback) {
 
-  genid() {}
+    const docLink = `${this.collectionLink}/docs/${sid}`;
+
+    const deleteDocument = () => this.client.deleteDocument(docLink, err => {
+      if (err) return cb(err);
+      return cb();
+    });
+
+    if (this.initialized) return deleteDocument();
+
+    this.initialize(err => {
+      if (err) return cb(err);
+      return deleteDocument();
+    });
+
+  }
+
+  genid(req) {}
 
   get(sid, cb = defaultCallback) {}
 
@@ -167,25 +203,6 @@ class DocumentDBStore extends EventEmitter {
 
   length() {}
 
-  makeDatabaseRequest(dbFunction, ...args) {
-
-    const cb = args[args.length - 1]; // do not use .pop() here, or the cb won't get passed on
-
-    if (typeof cb !== 'function') {
-      throw new Error(`Callback parameter is undefined for the function "${dbFunction.name}".`);
-    }
-
-    if (this.isInitialized) {
-      return dbFunction.apply(this.client, args);
-    }
-
-    this.initialize(err => {
-      if (err) return cb(err);
-      return dbFunction.apply(this.client, args);
-    });
-
-  }
-
   set(sid, session, cb = defaultCallback) {
 
     if (sid !== session.id) {
@@ -197,9 +214,16 @@ class DocumentDBStore extends EventEmitter {
     const doc = Object.assign({}, session);
     if (this.ttl) doc.ttl = this.ttl;
 
-    this.makeDatabaseRequest(this.client.upsertDocument, this.collectionLink, doc, opts, err => {
+    const upsertDocument = () => this.client.upsertDocument(this.collectionLink, doc, opts, err => {
       if (err) return cb(new Error(`Error upserting session data to database: ${err.body}`));
       return cb();
+    });
+
+    if (this.initialized) return upsertDocument();
+
+    this.initialize(err => {
+      if (err) return cb(err);
+      return upsertDocument();
     });
 
   }

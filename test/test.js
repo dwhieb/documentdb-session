@@ -44,6 +44,11 @@ describe('DocumentDBStore', function spec() {
   // Use when you want to delete and recreate the database during testing
   // Also tests .initialize()
   beforeAll(function beforeTest(done) {
+
+    if (!host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
+
+    if (!key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
+
     db.deleteDatabase(databaseLink, err => {
 
       if (err && err.code != 404) {
@@ -74,13 +79,13 @@ describe('DocumentDBStore', function spec() {
   });
   */
 
-  it('.initialize()', function initialize(done) {
+  xit('.initialize()', function initialize(done) {
     expect(this.store.client).toBeDefined();
     expect(this.store.database).toBe(database);
     done();
   });
 
-  it('creates a database', function createDatabase(done) {
+  xit('creates a database', function createDatabase(done) {
     db.readDatabase(databaseLink, (err, res) => {
       if (err) fail(err.body);
       expect(res.id).toBe(database);
@@ -88,7 +93,7 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  it('creates a collection', function createCollection(done) {
+  xit('creates a collection', function createCollection(done) {
     db.readCollection(collectionLink, (err, res) => {
       if (err) fail(err.body);
       expect(res.id).toBe(collection);
@@ -128,7 +133,7 @@ describe('DocumentDBStore', function spec() {
 
   }, 20000);
 
-  it('.all()', function all(done) {
+  xit('.all()', function all(done) {
 
     const session1 = {
       id: 'all-session-1',
@@ -162,7 +167,7 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  it('.clear()', function clear(done) {
+  xit('.clear()', function clear(done) {
 
     const session1 = {
       id: 'clear-session-1',
@@ -237,7 +242,7 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  xit('.genid()', function genid(done) {
+  it('.genid()', function genid(done) {
 
     const id = this.store.genid();
 
