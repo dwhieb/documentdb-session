@@ -53,7 +53,7 @@ Option            | Default          | Description
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
 `host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`. You can also provide this in an environment variable, (`DOCUMENTDB_URL`) instead.
 `key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists. You can also provide this in an environment variable (`DOCUMENTDB_KEY`) instead.
-`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on **Configuring TTL** below. *Enabling TTL is strongly recommended.*
+`ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on [**Configuring TTL**](https://github.com/dwhieb/documentdb-session#configuring-ttl-time-to-live-or-expiration-time) below. *Enabling TTL is strongly recommended.*
 
 **NB:** If you'd like to more fully customize the settings for the collection where your session data is stored (e.g. the connection policy and consistency level), you can create the collection in advance, and simply provide the ID of that collection in the `collection` config parameter. `documentdb-session` will then use that collection's settings.
 
@@ -70,7 +70,7 @@ You can set a default TTL for the collection either by calling the `.replaceColl
 
 **2. Only set a TTL for session documents**
 
-Choose this option if you will be storing other kinds of data besides just sessions in your collection. With this option, each session document will be given a `ttl` attribute with the value you specify in the `documentdb-session` config object (see above). The session documents will be deleted after they expire, but not the other documents in your collection (unless they also have a `ttl` property on them).
+Choose this option if you will be storing other kinds of data besides just sessions in your collection. With this option, each session document will be given a `ttl` attribute with the value you specify in the `documentdb-session` config object (see the config options [above](https://github.com/dwhieb/documentdb-session#config-options)). The session documents will be deleted after they expire, but not the other documents in your collection (unless they also have a `ttl` property on them).
 
 To configure TTL for session documents, include a value for `ttl` in the `documentdb-session` config object, and make sure that your collection has TTL enabled, but without a default expiration time. `documentdb-session` will not enable TTL on the collection unless it creates the collection during initialization; if you created your own collection, you will need to enable TTL manually.
 
@@ -102,7 +102,7 @@ const resolver = new PartitionResolver(partitionFunction, [coll1, coll2]);
 store.client.partitionResolvers[databaseLink] = resolver;
 ```
 
-## Making the Document ID Match the Session ID
+### Making the Document ID Match the Session ID
 `express-session` allows you to pass it a [.genid()](https://github.com/expressjs/session#genid) function that generates a string for use as the session ID. If you would like the IDs of your DocumentDB documents to be the same as your session IDs (useful for debugging and looking up sessions), `documentdb-session` provides a `.genid()` method that you can pass to `express-session`.
 
 ```
@@ -118,7 +118,7 @@ app.use(session({
 `documentdb-session` follows the [specification for session stores](https://github.com/expressjs/session#session-store-implementation) given by `express-session`. It includes all required, recommended, and optional methods, as well as a few extra convenience methods.
 
 ### DocumentDBStore
-The `DocumentDBStore` object exposed by `documentdb-session` is used to create a new instance of a session store. This may then be passed to `express-session`. See the [Typical Usage]() above for an example.
+The `DocumentDBStore` object exposed by `documentdb-session` is used to create a new instance of a session store. This may then be passed to `express-session`. See the [Typical Usage](https://github.com/dwhieb/documentdb-session#typical-usage) above for an example.
 
 ### .client
 The DocumentDB DocumentClient object from the Node.js SDK (complete documentation [here](http://azure.github.io/azure-documentdb-node/DocumentClient.html)). This provides complete access to the DocumentDB API and all its methods, and can be used to customize collection settings, or make other database calls independent of storing session data.
@@ -138,8 +138,8 @@ Deletes a session with the given session ID (`sid`). Callback is fired once the 
 
 `callback(err)`
 
-### .genid()
-TODO (callback?)
+### .genid(req)
+A function to generate an ID which `express-session` will use as the session ID. The generated ID will be the same as the DocumentDB document ID for that session. See [**Making the Document ID Match the Session ID**](https://github.com/dwhieb/documentdb-session#making-the-document-id-match-the-session-id) for more details.
 
 ### .get(sid, cb)
 Retrieves a session from the collection using the given session ID (`sid`). The session is returned as an object, and includes its administrative database properties (e.g. `_RID`, `_ETAG`). If the session is not found, the `session` object will be set to `null`.
@@ -178,7 +178,7 @@ Upserts the session into the collection given a session ID (`sid`) and session o
 `callback(err)`
 
 ### .touch(sid, session, cb)
-Resets the TTL (time-to-live) for the session (see the `ttl` config option above). The callback fires onces the document has been updated. This operation uses a stored procedure called `touch`, which is uploaded to the collection on initialization.
+Resets the TTL (time-to-live) for the session (see the [`ttl` config option](https://github.com/dwhieb/documentdb-session#config-options) above). The callback fires onces the document has been updated. This operation uses a stored procedure called `touch`, which is uploaded to the collection on initialization.
 
 `callback(err)`
 
