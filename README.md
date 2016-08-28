@@ -47,7 +47,7 @@ app.use(session({ store: new DocumentDBStore(config) }));
 
 ## Config Options
 Option            | Default          | Description
------------------ | ---------------- | -----------
+----------------- | ---------------- | :----------
 `collection`      | `"sessions"` | The ID of the collection where the session data should be stored. If the collection does not exist, it will be created when the session store initializes. The collection may contain other data, or it may be a dedicated collection just for sessions.
 `database`        | `"sessionstore"` | The ID of the database where the session data should be stored. If the database does not exist, it will be creaed when the session store initializes.
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
