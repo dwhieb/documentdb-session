@@ -149,9 +149,7 @@ class DocumentDBStore extends EventEmitter {
     // Run the stored procedure for `.clear()`
     const executeStoredProcedure = () => {
       this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
-        if (err) {
-          cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
-        }
+        if (err) return cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
 
         // if a continuation is returned, execute the stored procedure again
         if (res.continuation) {
@@ -172,9 +170,7 @@ class DocumentDBStore extends EventEmitter {
 
       // if the database hasn't been initialized, initialize it, then run the stored procedure
       this.initialize(err => {
-        if (err) {
-          cb(err);
-        }
+        if (err) return cb(err);
         executeStoredProcedure();
       });
 
@@ -245,11 +241,8 @@ class DocumentDBStore extends EventEmitter {
 
     // Runs the .deleteDocument() method of the DocumentDB SDK
     const deleteDocument = () => this.client.deleteDocument(docLink, err => {
-      if (err) {
-        cb(new Error(`Error deleting document: ${err.body}`));
-      } else {
-        cb();
-      }
+      if (err) return cb(new Error(`Error deleting document: ${err.body}`));
+      cb();
     });
 
     if (this.initialized) {
@@ -261,11 +254,8 @@ class DocumentDBStore extends EventEmitter {
 
       // if the database hasn't been initialized, initialize it, then delete the session
       this.initialize(err => {
-        if (err) {
-          cb(err);
-        } else {
-          deleteDocument();
-        }
+        if (err) return cb(err);
+        deleteDocument();
       });
 
     }
@@ -284,11 +274,8 @@ class DocumentDBStore extends EventEmitter {
     const docLink = `${this.collectionLink}/docs/${sid}`;
 
     const readDocument = () => this.client.readDocument(docLink, (err, doc) => {
-      if (err) {
-        cb(new Error(`Error reading document: ${err.body}`));
-      } else {
-        cb(null, doc);
-      }
+      if (err) return cb(new Error(`Error reading document: ${err.body}`));
+      cb(null, doc);
     });
 
     if (this.initialized) {
@@ -300,11 +287,8 @@ class DocumentDBStore extends EventEmitter {
 
       // if the database hasn't been initialized, initialize it, then get the session
       this.initialize(err => {
-        if (err) {
-          cb(err);
-        } else {
-          readDocument();
-        }
+        if (err) return cb(err);
+        readDocument();
       });
 
     }
@@ -373,23 +357,17 @@ class DocumentDBStore extends EventEmitter {
       let documentsFound = 0;
 
       this.client.executeStoredProcedure(this.sprocs.length.link, params, (err, res) => {
-        if (err) {
+        if (err) return cb(new Error(`Error executing the stored procedure for '.length()': ${err.body}`));
 
-          cb(new Error(`Error executing the stored procedure for '.length()': ${err.body}`));
+        // add the retrieved results to the running total
+        documentsFound += res.documentsFound;
 
-        } else {
-
-          // add the retrieved results to the running total
-          documentsFound += res.documentsFound;
-
-          // if a continuation token was returned, run the stored procedure again to get more results
-          if (res.continuation) {
-            executeStoredProcedure(res.continuation);
-          }
-
-          cb(null, documentsFound);
-
+        // if a continuation token was returned, run the stored procedure again to get more results
+        if (res.continuation) {
+          executeStoredProcedure(res.continuation);
         }
+
+        cb(null, documentsFound);
 
       });
     };
@@ -399,11 +377,8 @@ class DocumentDBStore extends EventEmitter {
 
     // if the database isn't initialized, initialize it, then run the stored procedure
     this.initialize(err => {
-      if (err) {
-        cb(err);
-      } else {
-        executeStoredProcedure();
-      }
+      if (err) cb(err);
+      executeStoredProcedure();
     });
 
   }
@@ -431,11 +406,8 @@ class DocumentDBStore extends EventEmitter {
       doc.lastActive = Date.now();
 
       const upsertDocument = () => this.client.upsertDocument(this.collectionLink, doc, err => {
-        if (err) {
-          cb(new Error(`Error upserting session data to database: ${err.body}`));
-        } else {
-          cb();
-        }
+        if (err) return cb(new Error(`Error upserting session data to database: ${err.body}`));
+        cb();
       });
 
       if (this.initialized) {
@@ -447,11 +419,8 @@ class DocumentDBStore extends EventEmitter {
 
         // if the database hasn't been initialized, initialize it, then upsert the session data
         this.initialize(err => {
-          if (err) {
-            cb(err);
-          } else {
-            upsertDocument();
-          }
+          if (err) return cb(err);
+          upsertDocument();
         });
 
       }

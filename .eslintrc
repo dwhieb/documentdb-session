@@ -30,7 +30,7 @@
     "block-scoped-var": "warn",
     "block-spacing": ["error", "always"],
     "brace-style": ["error", "1tbs", { "allowSingleLine": true }],
-    "callback-return": "error",
+    "callback-return": "warn",
     "camelcase": ["warn", { "properties": "always" }],
     "comma-dangle": ["error", "always-multiline"],
     "comma-spacing": ["error", { "before": false, "after": true }],
