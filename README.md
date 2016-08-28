@@ -1,9 +1,15 @@
 # documentdb-session
 [![npm version](https://badge.fury.io/js/documentdb-session.svg)](https://badge.fury.io/js/documentdb-session)
+[![npm](https://img.shields.io/npm/dt/documentdb-session.svg?maxAge=2592000)]()
 [![Build Status](https://travis-ci.org/dwhieb/documentdb-session.svg?branch=master)](https://travis-ci.org/dwhieb/documentdb-session)
 [![Dependencies Status](https://david-dm.org/dwhieb/documentdb-session.svg)](https://travis-ci.org/dwhieb/documentdb-session)
 [![GitHub issues](https://img.shields.io/github/issues/dwhieb/documentdb-session.svg)](https://github.com/dwhieb/documentdb-session/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/dwhieb/documentdb-session/master/LICENSE)
+
+[![GitHub forks](https://img.shields.io/github/forks/dwhieb/documentdb-session.svg?style=social&label=Fork&maxAge=2592000)]()
+[![GitHub stars](https://img.shields.io/github/stars/dwhieb/documentdb-session.svg?style=social&label=Star&maxAge=2592000)]()
+[![GitHub watchers](https://img.shields.io/github/watchers/dwhieb/documentdb-session.svg?style=social&label=Watch&maxAge=2592000)]()
+[![GitHub followers](https://img.shields.io/github/followers/dwhieb.svg?style=social&label=Follow&maxAge=2592000)]()
 
 An Azure DocumentDB store for `express-session`.
 
