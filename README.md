@@ -43,12 +43,18 @@ const session = require('express-session');
 const config = {
   host: `https://mydbaccount.documents.azure.com:443/`,
   key:  '8idtLLsiRJsKvgHLi...vgOJ9YXTTYK61LX15pobbmQ==',
-  ttl:  28800 // 8 hours
+  ttl:  28800 // expire document in 8 hours (in seconds)
 };
 
 const app = express();
 
-app.use(session({ store: new DocumentDBStore(config) }));
+app.use(session({
+  maxAge: 28800000, // expire cookie in 8 hours (in milliseconds),
+  resave: false,
+  saveUninitialized: false,
+  secret: 'mycookiesecret',
+  store: new DocumentDBStore(config) // pass the DocumentDB session store to express-session
+}));
 ```
 
 ## Config Options
