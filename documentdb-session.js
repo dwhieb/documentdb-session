@@ -116,7 +116,7 @@ class DocumentDBStore extends EventEmitter {
     const queryDocuments = () => {
       this.client.queryDocuments(this.collectionLink, querySpec).toArray((err, sessions) => {
         if (err) return cb(new Error(`Error querying documents: ${err.body}`));
-        return cb(null, sessions);
+        cb(null, sessions);
       });
     };
 
@@ -130,7 +130,7 @@ class DocumentDBStore extends EventEmitter {
       // if the database hasn't been initialized, initialize it, then query documents
       this.initialize(err => {
         if (err) return cb(err);
-        return queryDocuments();
+        queryDocuments();
       });
 
     }
@@ -151,27 +151,35 @@ class DocumentDBStore extends EventEmitter {
     const executeStoredProcedure = () => {
       this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
         if (err) {
-          return cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
+          cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
         }
 
         // if a continuation is returned, execute the stored procedure again
         if (res.continuation) {
-          return this.clear(cb);
+          this.clear(cb);
+        } else {
+          cb();
         }
-
-        return cb();
 
       });
     };
 
-    // if the database has been initialized, run the stored procedure
-    if (this.initialized) return executeStoredProcedure();
+    if (this.initialized) {
 
-    // if the database hasn't been initialized, initialize it, then run the stored procedure
-    return this.initialize(err => {
-      if (err) return cb(err);
-      return executeStoredProcedure();
-    });
+      // if the database has been initialized, run the stored procedure
+      executeStoredProcedure();
+
+    } else {
+
+      // if the database hasn't been initialized, initialize it, then run the stored procedure
+      this.initialize(err => {
+        if (err) {
+          cb(err);
+        }
+        executeStoredProcedure();
+      });
+
+    }
 
   }
 
