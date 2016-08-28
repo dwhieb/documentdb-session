@@ -143,7 +143,6 @@ class DocumentDBStore extends EventEmitter {
    * @method
    * @type {Function}
    * @param {Function} [cb=defaultCallback]       The callback function to run
-   * @return {Function} cb
    */
   clear(cb = defaultCallback) {
 
@@ -246,8 +245,11 @@ class DocumentDBStore extends EventEmitter {
 
     // Runs the .deleteDocument() method of the DocumentDB SDK
     const deleteDocument = () => this.client.deleteDocument(docLink, err => {
-      if (err) return cb(new Error(`Error deleting document: ${err.body}`));
-      return cb();
+      if (err) {
+        cb(new Error(`Error deleting document: ${err.body}`));
+      } else {
+        cb();
+      }
     });
 
     if (this.initialized) {
@@ -259,8 +261,11 @@ class DocumentDBStore extends EventEmitter {
 
       // if the database hasn't been initialized, initialize it, then delete the session
       this.initialize(err => {
-        if (err) return cb(err);
-        return deleteDocument();
+        if (err) {
+          cb(err);
+        } else {
+          deleteDocument();
+        }
       });
 
     }
@@ -279,8 +284,11 @@ class DocumentDBStore extends EventEmitter {
     const docLink = `${this.collectionLink}/docs/${sid}`;
 
     const readDocument = () => this.client.readDocument(docLink, (err, doc) => {
-      if (err) return cb(new Error(`Error reading document: ${err.body}`));
-      return cb(null, doc);
+      if (err) {
+        cb(new Error(`Error reading document: ${err.body}`));
+      } else {
+        cb(null, doc);
+      }
     });
 
     if (this.initialized) {
@@ -292,8 +300,11 @@ class DocumentDBStore extends EventEmitter {
 
       // if the database hasn't been initialized, initialize it, then get the session
       this.initialize(err => {
-        if (err) return cb(err);
-        return readDocument();
+        if (err) {
+          cb(err);
+        } else {
+          readDocument();
+        }
       });
 
     }
@@ -306,7 +317,6 @@ class DocumentDBStore extends EventEmitter {
    * @method
    * @type {Function}
    * @param {Function} [cb = defaultCallback]         The callback function to run
-   * @return {Function} cb
    */
   initialize(cb = defaultCallback) {
 
@@ -342,7 +352,7 @@ class DocumentDBStore extends EventEmitter {
 
     }
 
-    return cb();
+    cb();
 
   }
 
@@ -364,18 +374,22 @@ class DocumentDBStore extends EventEmitter {
 
       this.client.executeStoredProcedure(this.sprocs.length.link, params, (err, res) => {
         if (err) {
-          return cb(new Error(`Error executing the stored procedure for '.length()': ${err.body}`));
+
+          cb(new Error(`Error executing the stored procedure for '.length()': ${err.body}`));
+
+        } else {
+
+          // add the retrieved results to the running total
+          documentsFound += res.documentsFound;
+
+          // if a continuation token was returned, run the stored procedure again to get more results
+          if (res.continuation) {
+            executeStoredProcedure(res.continuation);
+          }
+
+          cb(null, documentsFound);
+
         }
-
-        // add the retrieved results to the running total
-        documentsFound += res.documentsFound;
-
-        // if a continuation token was returned, run the stored procedure again to get more results
-        if (res.continuation) {
-          executeStoredProcedure(res.continuation);
-        }
-
-        return cb(null, documentsFound);
 
       });
     };
@@ -384,9 +398,12 @@ class DocumentDBStore extends EventEmitter {
     if (this.initialized) return executeStoredProcedure();
 
     // if the database isn't initialized, initialize it, then run the stored procedure
-    return this.initialize(err => {
-      if (err) return cb(err);
-      return executeStoredProcedure();
+    this.initialize(err => {
+      if (err) {
+        cb(err);
+      } else {
+        executeStoredProcedure();
+      }
     });
 
   }
@@ -398,39 +415,52 @@ class DocumentDBStore extends EventEmitter {
    * @param  {String} sid                     The ID of the session to update
    * @param  {Object} session                 The session object to upload
    * @param  {Function} [cb=defaultCallback]  The callback function to run
-   * @return {Function} cb
    */
   set(sid, session, cb = defaultCallback) {
 
     // if the session ID parameter and the session ID property don't match, throw an error
-    if (sid !== session.id) {
-      return cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.')); // eslint-disable-line max-len
+    if (sid === session.id) {
+
+      // create a new session object, to avoid altering the original parameter
+      const doc = Object.assign({}, session);
+
+      // only add a `ttl` property if one is set in the documentdb-session config
+      // an invalid `ttl` property on a document with throw an error in documentdb
+      if (this.ttl) doc.ttl = this.ttl;
+      doc[this.filterOn] = this.filterValue;
+      doc.lastActive = Date.now();
+
+      const upsertDocument = () => this.client.upsertDocument(this.collectionLink, doc, err => {
+        if (err) {
+          cb(new Error(`Error upserting session data to database: ${err.body}`));
+        } else {
+          cb();
+        }
+      });
+
+      if (this.initialized) {
+
+        // if the database is initialized, upsert the session data
+        upsertDocument();
+
+      } else {
+
+        // if the database hasn't been initialized, initialize it, then upsert the session data
+        this.initialize(err => {
+          if (err) {
+            cb(err);
+          } else {
+            upsertDocument();
+          }
+        });
+
+      }
+
+    } else {
+
+      cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.')); // eslint-disable-line max-len
+
     }
-
-    // create a new session object, to avoid altering the original parameter
-    const doc = Object.assign({}, session);
-
-    // only add a `ttl` property if one is set in the documentdb-session config
-    // an invalid `ttl` property on a document with throw an error in documentdb
-    if (this.ttl) doc.ttl = this.ttl;
-    doc[this.filterOn] = this.filterValue;
-    doc.lastActive = Date.now();
-
-    const upsertDocument = () => this.client.upsertDocument(this.collectionLink, doc, err => {
-      if (err) return cb(new Error(`Error upserting session data to database: ${err.body}`));
-      return cb();
-    });
-
-    // if the database is initialized, upsert the session data
-    if (this.initialized) {
-      return upsertDocument();
-    }
-
-    // if the database hasn't been initialized, initialize it, then upsert the session data
-    return this.initialize(err => {
-      if (err) return cb(err);
-      return upsertDocument();
-    });
 
   }
 
@@ -472,10 +502,10 @@ class DocumentDBStore extends EventEmitter {
 
   /**
    * Returns whether the database, collection, and stored procedures have been initialized
-   * @method isInitialized
+   * @method initialized
    * @return {Boolean}
    */
-  get isInitialized() {
+  get initialized() {
     return Object.keys(init).every(component => init[component]);
   }
 
