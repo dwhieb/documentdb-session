@@ -1,6 +1,6 @@
 {
   "name": "documentdb-session",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "An express-session Store for Azure's DocumentDB NoSQL database service.",
   "homepage": "https://github.com/dwhieb/documentdb-session#readme",
   "author": {
