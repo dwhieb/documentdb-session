@@ -274,7 +274,8 @@ class DocumentDBStore extends EventEmitter {
     const docLink = `${this.collectionLink}/docs/${sid}`;
 
     const readDocument = () => this.client.readDocument(docLink, (err, doc) => {
-      if (err) return cb(new Error(`Error reading document: ${err.body}`));
+      if (err && err.code == 404) return cb(null, null);
+      else if (err) return cb(new Error(`Error reading document: ${err.body}`));
       cb(null, doc);
     });
 
