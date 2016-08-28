@@ -473,9 +473,4 @@ class DocumentDBStore extends EventEmitter {
 
 }
 
-// TODO: return a Proxy on DocumentDBStore rather than the class itself
-// (or some other way to hide certain private methods and variables)
-// - include validation of config object (`host` and `key` required)
-// - make certain fields read-only
-// - use Proxy instead of .makeDatabaseRequest to check for initialization?
 module.exports = DocumentDBStore;
