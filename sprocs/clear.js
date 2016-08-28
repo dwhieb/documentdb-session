@@ -67,7 +67,7 @@ function clear(filterOn, filterValue) {
   /**
    * Filters for session documents based on the provided filter key and value ({@link filterOn}, {@link filterValue}), and immediately begins deleting them as results are returned
    * @function
-   * @param  {String} [continuationToken]   A continuation token, if one was received from a previous request
+   * @param {String} [continuationToken]   A continuation token, if one was received from a previous request
    */
   function getSessions(continuationToken) {
 
@@ -83,9 +83,12 @@ function clear(filterOn, filterValue) {
 
     /**
      * Handler for the filter request
+     * @function
      * @param  {Object} err                 The error object, if any was thrown
+     * @param  {Number} err.number          The error code
+     * @param  {String} err.body            The body of the error message
      * @param  {Array} sessions             The retrieved sessions
-     * @param  {Object} info                Info about the request, include a continuation token
+     * @param  {Object} info                Info about the request, including a continuation token
      * @param  {String} info.continuation   The continuation token, if any was passed
      * @return {responseBody}
      */

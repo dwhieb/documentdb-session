@@ -19,7 +19,7 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 
 * Supports all required, recommended, and optional methods for a session store, as outlined by [`express-session`'s specification](https://github.com/expressjs/session#session-store-implementation).
 
-* Provides an optional `.genid()` method that makes the document ID the same as the session ID. This makes it easy to look up sessions in your database, and helps with debugging.
+* Makes the DocumentDB document ID for the session the same as the session ID. This makes it easy to look up sessions in your database, and helps with debugging.
 
 * Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
@@ -102,18 +102,6 @@ const resolver = new PartitionResolver(partitionFunction, [coll1, coll2]);
 store.client.partitionResolvers[databaseLink] = resolver;
 ```
 
-### Making the Document ID Match the Session ID
-`express-session` allows you to pass it a [.genid()](https://github.com/expressjs/session#genid) function that generates a string for use as the session ID. If you would like the IDs of your DocumentDB documents to be the same as your session IDs (useful for debugging and looking up sessions), `documentdb-session` provides a `.genid()` method that you can pass to `express-session`.
-
-```
-const store = new DocumentDBStore(config);
-
-app.use(session({
-  store: store,
-  genid: store.genid
-}));
-```
-
 ## API
 `documentdb-session` follows the [specification for session stores](https://github.com/expressjs/session#session-store-implementation) given by `express-session`. It includes all required, recommended, and optional methods, as well as a few extra convenience methods.
 
@@ -137,9 +125,6 @@ Deletes all sessions from the collection. Callback is fired once the collection 
 Deletes a session with the given session ID (`sid`). Callback is fired once the document is deleted.
 
 `callback(err)`
-
-### .genid(req)
-A function to generate an ID which `express-session` will use as the session ID. The generated ID will be the same as the DocumentDB document ID for that session. See [**Making the Document ID Match the Session ID**](https://github.com/dwhieb/documentdb-session#making-the-document-id-match-the-session-id) for more details.
 
 ### .get(sid, cb)
 Retrieves a session from the collection using the given session ID (`sid`). The session is returned as an object, and includes its administrative database properties (e.g. `_RID`, `_ETAG`). If the session is not found, the `session` object will be set to `null`.
@@ -178,7 +163,7 @@ Upserts the session into the collection given a session ID (`sid`) and session o
 `callback(err)`
 
 ### .touch(sid, session, cb)
-Resets the TTL (time-to-live) for the session (see the [`ttl` config option](https://github.com/dwhieb/documentdb-session#config-options) above). The callback fires onces the document has been updated. This operation uses a stored procedure called `touch`, which is uploaded to the collection on initialization.
+Resets the TTL (time-to-live) for the session (see the [`ttl` config option](https://github.com/dwhieb/documentdb-session#config-options) above). The callback fires onces the document has been updated. This operation works by updating the `lastActive` field on the document.
 
 `callback(err)`
 

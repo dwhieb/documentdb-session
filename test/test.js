@@ -79,13 +79,13 @@ describe('DocumentDBStore', function spec() {
   });
   */
 
-  xit('.initialize()', function initialize(done) {
+  it('.initialize()', function initialize(done) {
     expect(this.store.client).toBeDefined();
     expect(this.store.database).toBe(database);
     done();
   });
 
-  xit('creates a database', function createDatabase(done) {
+  it('creates a database', function createDatabase(done) {
     db.readDatabase(databaseLink, (err, res) => {
       if (err) fail(err.body);
       expect(res.id).toBe(database);
@@ -93,7 +93,7 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  xit('creates a collection', function createCollection(done) {
+  it('creates a collection', function createCollection(done) {
     db.readCollection(collectionLink, (err, res) => {
       if (err) fail(err.body);
       expect(res.id).toBe(collection);
@@ -108,6 +108,7 @@ describe('DocumentDBStore', function spec() {
       cookie: {},
       data: 'session data',
       type: 'session',
+      lastActive: new Date(),
     };
 
     this.store.set(session.id, session, err => {
@@ -133,18 +134,20 @@ describe('DocumentDBStore', function spec() {
 
   }, 20000);
 
-  xit('.all()', function all(done) {
+  it('.all()', function all(done) {
 
     const session1 = {
       id: 'all-session-1',
       ttl: 15,
       type: 'session',
+      lastActive: new Date(),
     };
 
     const session2 = {
       id: 'all-session-2',
       ttl: 15,
       type: 'session',
+      lastActive: new Date(),
     };
 
     db.upsertDocument(collectionLink, session1, err => {
@@ -167,18 +170,20 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  xit('.clear()', function clear(done) {
+  it('.clear()', function clear(done) {
 
     const session1 = {
       id: 'clear-session-1',
       ttl: 15,
       type: 'session',
+      lastActive: new Date(),
     };
 
     const session2 = {
       id: 'clear-session-2',
       ttl: 15,
       type: 'session',
+      lastActive: new Date(),
     };
 
     db.upsertDocument(collectionLink, session1, err => {
@@ -208,7 +213,7 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  xit('.destroy()', function destroy(done) {
+  it('.destroy()', function destroy(done) {
 
     const session = {
       id: 'destroy-session',
@@ -216,6 +221,7 @@ describe('DocumentDBStore', function spec() {
       data: 'session data',
       ttl: 300,
       type: 'session',
+      lastActive: new Date(),
     };
 
     db.upsertDocument(collectionLink, session, err => {
@@ -242,21 +248,7 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  it('.genid()', function genid(done) {
-
-    const id = this.store.genid();
-
-    const documentLink = `${collectionLink}/docs/${id}`;
-
-    db.readDocument(documentLink, (err, res) => {
-      if (err) fail(err.body);
-      if (res) expect(res.id).toBe(id);
-      done();
-    });
-
-  });
-
-  xit('.get()', function get(done) {
+  it('.get()', function get(done) {
 
     const session = {
       id: 'get-session',
@@ -264,6 +256,7 @@ describe('DocumentDBStore', function spec() {
       data: 'session data',
       ttl: 300,
       type: 'session',
+      lastActive: new Date(),
     };
 
     db.upsertDocument(collectionLink, session, err => {
@@ -279,7 +272,7 @@ describe('DocumentDBStore', function spec() {
 
   });
 
-  xit('.length()', function length(done) {
+  it('.length()', function length(done) {
     this.store.length((err, length) => {
       if (err) fail(err.message);
       expect(typeof length).toBe('number');
@@ -287,13 +280,14 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  xit('.set()', function set(done) {
+  it('.set()', function set(done) {
 
     const session = {
       id: 'set-session',
       data: 'session data',
       cookie: {},
       type: 'session',
+      lastActive: new Date(),
     };
 
     this.store.set(session.id, session, err => {
@@ -310,7 +304,7 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  xit('.touch()', function touch(done) {
+  it('.touch()', function touch(done) {
 
     const session = {
       id: 'touch-session',
@@ -318,6 +312,7 @@ describe('DocumentDBStore', function spec() {
       data: 'session data',
       ttl: 300,
       type: 'session',
+      lastActive: new Date(),
     };
 
     db.upsertDocument(collectionLink, session, (err, res) => {
@@ -344,6 +339,6 @@ describe('DocumentDBStore', function spec() {
 
     });
 
-  });
+  }, 10000);
 
 });
