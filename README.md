@@ -1,9 +1,15 @@
 # documentdb-session
 [![npm version](https://badge.fury.io/js/documentdb-session.svg)](https://badge.fury.io/js/documentdb-session)
+[![npm](https://img.shields.io/npm/dt/documentdb-session.svg?maxAge=2592000)]()
 [![Build Status](https://travis-ci.org/dwhieb/documentdb-session.svg?branch=master)](https://travis-ci.org/dwhieb/documentdb-session)
 [![Dependencies Status](https://david-dm.org/dwhieb/documentdb-session.svg)](https://travis-ci.org/dwhieb/documentdb-session)
 [![GitHub issues](https://img.shields.io/github/issues/dwhieb/documentdb-session.svg)](https://github.com/dwhieb/documentdb-session/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/dwhieb/documentdb-session/master/LICENSE)
+
+[![GitHub forks](https://img.shields.io/github/forks/dwhieb/documentdb-session.svg?style=social&label=Fork&maxAge=2592000)]()
+[![GitHub stars](https://img.shields.io/github/stars/dwhieb/documentdb-session.svg?style=social&label=Star&maxAge=2592000)]()
+[![GitHub watchers](https://img.shields.io/github/watchers/dwhieb/documentdb-session.svg?style=social&label=Watch&maxAge=2592000)]()
+[![GitHub followers](https://img.shields.io/github/followers/dwhieb.svg?style=social&label=Follow&maxAge=2592000)]()
 
 An Azure DocumentDB store for `express-session`.
 
@@ -47,7 +53,7 @@ app.use(session({ store: new DocumentDBStore(config) }));
 
 ## Config Options
 Option            | Default          | Description
------------------ | ---------------- | -----------
+----------------- | ---------------- | :----------
 `collection`      | `"sessions"` | The ID of the collection where the session data should be stored. If the collection does not exist, it will be created when the session store initializes. The collection may contain other data, or it may be a dedicated collection just for sessions.
 `database`        | `"sessionstore"` | The ID of the database where the session data should be stored. If the database does not exist, it will be creaed when the session store initializes.
 `discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
