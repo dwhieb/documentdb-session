@@ -30,7 +30,7 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 * Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
 ## Status
-Code is mostly stable and passes all tests, but has not yet been tested in a production environment. The version will be incremented to `v1.0.0-beta` once `documentdb-session` has been successfully tested in a production environment.
+Code is mostly stable and passes all tests, and is currently being tested in a production environment. The version will be incremented to `v1.0.0-beta` once testing is complete.
 
 ## Install
 ```
