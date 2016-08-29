@@ -22,13 +22,6 @@ const defaults = {
   ttl:            null,
 };
 
-// keeps track of which initialization steps have been completed
-const init = {
-  database:   false,
-  collection: false,
-  sprocs:     false,
-};
-
 /**
  * The default callback for use with store methods, in case one isn't provided
  * @function
@@ -70,6 +63,7 @@ class DocumentDBStore extends EventEmitter {
     this.collectionLink = `${this.databaseLink}/colls/${this.collection}`;
     this.filterOn = Object.keys(this.discriminator)[0]; // the key to filter sessions on
     this.filterValue = this.discriminator[this.filterOn]; // the value to filter sessions on
+    this.initialized = false;
 
     // a hash of the stored procedures used by this package
     this.sprocs = {
@@ -148,7 +142,10 @@ class DocumentDBStore extends EventEmitter {
 
     // Run the stored procedure for `.clear()`
     const executeStoredProcedure = () => {
-      this.client.executeStoredProcedure(this.sprocs.clear.link, (err, res) => {
+
+      const sprocLink = `${this.collectionLink}/sprocs/clear`;
+
+      this.client.executeStoredProcedure(sprocLink, (err, res) => {
         if (err) return cb(new Error(`Error executing the stored procedure for '.clear()': ${err.body}`));
 
         // if a continuation is returned, execute the stored procedure again
@@ -305,39 +302,14 @@ class DocumentDBStore extends EventEmitter {
    */
   initialize(cb = defaultCallback) {
 
-    if (!init.database) {
-
-      // if the session store database hasn't been initialized, try to create one
-      this.createDatabase()
-      .then(() => {
-        init.database = true;
-        this.initialize(cb);
-      })
-      .catch(err => cb(err));
-
-    } else if (!init.collection) {
-
-      // if the sessions collection hasn't been initialized, try to create one
-      this.createCollection()
-      .then(() => {
-        init.collection = true;
-        this.initialize(cb);
-      })
-      .catch(err => cb(err));
-
-    } else if (!init.sprocs) {
-
-      // if the stored procedures haven't been initialized, upsert them
-      this.uploadSprocs()
-      .then(() => {
-        init.sprocs = true;
-        this.initialize(cb);
-      })
-      .catch(err => cb(err));
-
-    }
-
-    cb();
+    this.createDatabase()
+    .then(this.createCollection.bind(this))
+    .then(this.uploadSprocs.bind(this))
+    .then(() => {
+      this.initialized = true;
+      cb();
+    })
+    .catch(err => cb(err));
 
   }
 
@@ -355,9 +327,10 @@ class DocumentDBStore extends EventEmitter {
     const executeStoredProcedure = continuationToken => {
 
       const params = [this.filterOn, this.filterValue, continuationToken];
+      const sprocLink = `${this.collectionLink}/sprocs/length`;
       let documentsFound = 0;
 
-      this.client.executeStoredProcedure(this.sprocs.length.link, params, (err, res) => {
+      this.client.executeStoredProcedure(sprocLink, params, (err, res) => {
         if (err) return cb(new Error(`Error executing the stored procedure for '.length()': ${err.body}`));
 
         // add the retrieved results to the running total
@@ -400,14 +373,17 @@ class DocumentDBStore extends EventEmitter {
       // create a new session object, to avoid altering the original parameter
       const doc = Object.assign({}, session);
 
-      // only add a `ttl` property if one is set in the documentdb-session config
-      // an invalid `ttl` property on a document with throw an error in documentdb
-      if (this.ttl) doc.ttl = this.ttl;
+      doc.id = sid;
       doc[this.filterOn] = this.filterValue;
       doc.lastActive = Date.now();
+      if (this.ttl) doc.ttl = this.ttl;
+      // only add a `ttl` property if one is set in the documentdb-session config
+      // an invalid `ttl` property on a document with throw an error in documentdb
 
       const upsertDocument = () => this.client.upsertDocument(this.collectionLink, doc, err => {
-        if (err) return cb(new Error(`Error upserting session data to database: ${err.body}`));
+        if (err) {
+          return cb(new Error(`Error upserting session data to database: ${err.body}`));
+        }
         cb();
       });
 
@@ -427,7 +403,6 @@ class DocumentDBStore extends EventEmitter {
       }
 
     } else {
-
       cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.')); // eslint-disable-line max-len
 
     }
@@ -458,7 +433,6 @@ class DocumentDBStore extends EventEmitter {
     const uploadSproc = sproc => new Promise((resolve, reject) => {
       this.client.upsertStoredProcedure(this.collectionLink, this.sprocs[sproc.id], err => {
         if (err) reject(new Error(`Error upserting stored procedure: ${err.body}`));
-        this.sprocs[sproc.id].link = `${this.collectionLink}/sprocs/${sproc.id}`;
         resolve();
       });
     });
@@ -468,15 +442,6 @@ class DocumentDBStore extends EventEmitter {
 
     return Promise.all(promises);
 
-  }
-
-  /**
-   * Returns whether the database, collection, and stored procedures have been initialized
-   * @method initialized
-   * @return {Boolean}
-   */
-  get initialized() {
-    return Object.keys(init).every(component => init[component]);
   }
 
 }

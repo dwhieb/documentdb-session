@@ -29,6 +29,9 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 
 * Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
+## Status
+Code is mostly stable and passes all tests, but has not yet been tested in a production environment. The version will be incremented to `v1.0.0-beta` once `documentdb-session` has been successfully tested in a production environment.
+
 ## Install
 ```
 npm install --save documentdb-session
@@ -49,7 +52,9 @@ const config = {
 const app = express();
 
 app.use(session({
-  maxAge: 28800000, // expire cookie in 8 hours (in milliseconds),
+  cookie: {
+    maxAge: 28800000, // expire cookie in 8 hours (in milliseconds),
+  },
   resave: false,
   saveUninitialized: false,
   secret: 'mycookiesecret',
@@ -62,7 +67,7 @@ Option            | Default          | Description
 ----------------- | ---------------- | :----------
 `collection`      | `"sessions"` | The ID of the collection where the session data should be stored. If the collection does not exist, it will be created when the session store initializes. The collection may contain other data, or it may be a dedicated collection just for sessions.
 `database`        | `"sessionstore"` | The ID of the database where the session data should be stored. If the database does not exist, it will be creaed when the session store initializes.
-`discriminator`   | `{ "type": "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ "site": "mysite.com" }` or `{ "_type": "session" }`.
+`discriminator`   | `{ type: "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ site: "mysite.com" }` or `{ _type: "session" }`.
 `host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`. You can also provide this in an environment variable, (`DOCUMENTDB_URL`) instead.
 `key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists. You can also provide this in an environment variable (`DOCUMENTDB_KEY`) instead.
 `ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on [**Configuring TTL**](https://github.com/dwhieb/documentdb-session#configuring-ttl-time-to-live-or-expiration-time) below. *Enabling TTL is strongly recommended.*
