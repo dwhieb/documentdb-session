@@ -6,7 +6,7 @@
 */
 
 const documentdb = require('documentdb');
-const EventEmitter = require('events');
+const Store = require('express-session').Store;
 
 /**
  * The default configuration options for `documentdb-session`
@@ -32,7 +32,7 @@ const defaultCallback = err => {
 };
 
 /* A class representing a DocumentDBStore */
-class DocumentDBStore extends EventEmitter {
+class DocumentDBStore extends Store {
   /**
    * Create a new DocumentDBStore
    * @type {Object}
