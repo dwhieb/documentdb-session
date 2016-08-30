@@ -101,7 +101,7 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  it('expires documents', function expireDocuments(done) {
+  xit('expires documents', function expireDocuments(done) {
 
     const session = {
       id: 'expire-test',
