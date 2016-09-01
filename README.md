@@ -201,3 +201,9 @@ Testing is done using [Jasmine](http://jasmine.github.io/), and tests are run au
 
 ## Issues & Contributing
 [Issues](https://github.com/dwhieb/documentdb-session/issues), [feature requests](https://github.com/dwhieb/documentdb-session/issues), & pull requests welcome!
+
+### Git Workflow
+* `master` - Only contains stable, tested code. New versions are published to npm from here. Pull requests to `master` must pass all required Travis-CI checks, and use a squash commit.
+* `dev` - Contains code for the next version. Prerelease versions are published to npm from here.
+
+Pull requests can be made to either `dev` or `master`.

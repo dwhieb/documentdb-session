@@ -34,6 +34,6 @@
     "express-session": "^1.14.1"
   },
   "devDependencies": {
-    "jasmine": "^2.4.1"
+    "jasmine": "^2.5.0"
   }
 }

@@ -15,6 +15,10 @@ const host = process.env.DOCUMENTDB_URL;
 const key = process.env.DOCUMENTDB_KEY;
 const ttl = 15;
 
+if (!host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
+
+if (!key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
+
 const db = new documentdb.DocumentClient(host, { masterKey: key });
 
 describe('DocumentDBStore', function spec() {
@@ -22,10 +26,6 @@ describe('DocumentDBStore', function spec() {
   // Use when you want to use an existing database and collection for testing
   // Also tests .initialize()
   beforeAll(function beforeTest(done) {
-
-    if (!host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
-
-    if (!key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
 
     this.store = new DocumentDBStore({
       host,
@@ -41,7 +41,7 @@ describe('DocumentDBStore', function spec() {
   });
 
   /*
-  // Use when you want to delete and recreate the database during testing
+  // Use these when you want to delete and recreate the database during testing
   // Also tests .initialize()
   beforeAll(function beforeTest(done) {
 
@@ -101,7 +101,7 @@ describe('DocumentDBStore', function spec() {
     });
   });
 
-  xit('expires documents', function expireDocuments(done) {
+  it('expires documents', function expireDocuments(done) {
 
     const session = {
       id: 'expire-test',
@@ -128,11 +128,11 @@ describe('DocumentDBStore', function spec() {
             fail('Could not read document during expire test.');
           }
         });
-      }, 16000);
+      }, 45000);
 
     });
 
-  }, 20000);
+  }, 60000);
 
   it('.all()', function all(done) {
 
