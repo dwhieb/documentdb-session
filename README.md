@@ -30,12 +30,12 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 * Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
 ## Install
-```
+```bash
 npm install --save documentdb-session
 ```
 
 ## Typical Usage
-```
+```js
 const DocumentDBStore = require('documentdb-session');
 const express = require('express');
 const session = require('express-session');
@@ -95,7 +95,7 @@ To enable TTL without a default expiration, either call the `.replaceCollection(
 ### Working with Partitioned Collections
 If you use partitioned collections, you can enable partitioning in the same way that you would enable it using the [DocumentDB Node.js SDK](https://github.com/Azure/azure-documentdb-node). The session store instance exposes the DocumentDB SDK's [DocumentClient](http://azure.github.io/azure-documentdb-node/DocumentClient.html) object (as `.client`), which you can use to register your partition resolver. A short example is below, and you can see a more complete example of using a partition resolver [here](https://github.com/Azure/azure-documentdb-node/blob/master/samples/Partitioning/app.js).
 
-```
+```js
 const documentdb = require('documentdb');
 const DocumentDBStore = require('documentdb-session');
 
@@ -128,33 +128,41 @@ The DocumentDB DocumentClient object from the Node.js SDK (complete documentatio
 ### .all(cb)
 Retrieves all sessions from the collection, by filtering on the session discriminator (usually `"type": "session"`).
 
-`callback(err, sessions = [])`
+```js
+callback(err, sessions = [])
+```
 
 ### .clear(cb)
 Deletes all sessions from the collection. Callback is fired once the collection is cleared of all sessions. Other documents in the collection that are not sessions are not affected. This operation uses a stored procedure called `clear`, which is uploaded to the collection on initialization.
 
-`callback(err)`
+```js
+callback(err)
+```
 
 ### .destroy(sid, cb)
 Deletes a session with the given session ID (`sid`). Callback is fired once the document is deleted.
 
-`callback(err)`
+```js
+callback(err)
+```
 
 ### .get(sid, cb)
 Retrieves a session from the collection using the given session ID (`sid`). The session is returned as an object, and includes its administrative database properties (e.g. `_RID`, `_ETAG`). If the session is not found, the `session` object will be set to `null`.
 
-`callback(err, session)`
+```js
+callback(err, session)
+```
 
 ### .initialize(cb)
 Normally, `documentdb-session` will check for a DocumentDB database and collection the first time a request to the database is made, and will create them if they do not exist. It will also upload a few stored procedures to the collection. If you would like to initialize the database before you start making database calls, you can do so by calling `.initialize()`. This is useful if you want your application to check for database configuration errors before attempting to write sessions, and for testing.
 
-`callback(err)`
+```js
+callback(err)
+```
 
 **Example**
 
-```
-...
-
+```js
 const app = express();
 const store = new DocumentDBStore(config);
 
@@ -169,17 +177,23 @@ store.initialize((err, db) => {
 ### .length(cb)
 Retrieves a count of the number of sessions in the collection, filtering on the session discriminator (usually `"type": "session"`). This operation uses a stored procedure called `length`, which is uploaded to the collection on initialization.
 
-`callback(err, len)`
+```js
+callback(err, len)
+```
 
 ### .set(sid, session, cb)
 Upserts the session into the collection given a session ID (`sid`) and session object (`session`). The callback fires once the session has been added to the collection.
 
-`callback(err)`
+```js
+callback(err)
+```
 
 ### .touch(sid, session, cb)
 Resets the TTL (time-to-live) for the session (see the [`ttl` config option](https://github.com/dwhieb/documentdb-session#config-options) above). The callback fires onces the document has been updated. This operation works by updating the `lastActive` field on the document.
 
-`callback(err)`
+```js
+callback(err)
+```
 
 
 ## Tests
