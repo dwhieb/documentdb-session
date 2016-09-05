@@ -1,10 +1,3 @@
-/* eslint-disable
-   no-magic-numbers,
-   global-require,
-   eqeqeq,
-   max-statements
-*/
-
 const documentdb = require('documentdb');
 const Store = require('express-session').Store;
 
@@ -45,8 +38,6 @@ class DocumentDBStore extends Store {
     // copy configuration options to the Store
     Object.assign(this, defaults, config);
 
-    /* eslint-disable max-len */
-
     // if the `host` property is missing from the config, throw an error
     if (!this.host) {
       throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
@@ -56,8 +47,6 @@ class DocumentDBStore extends Store {
     if (!this.key) {
       throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
     }
-
-    /* eslint-enable max-len */
 
     this.databaseLink = `dbs/${this.database}`;
     this.collectionLink = `${this.databaseLink}/colls/${this.collection}`;
@@ -403,8 +392,7 @@ class DocumentDBStore extends Store {
       }
 
     } else {
-      cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.')); // eslint-disable-line max-len
-
+      cb(new Error('The value for the `sid` parameter is not equal to the value of `session.id`.'));
     }
 
   }
