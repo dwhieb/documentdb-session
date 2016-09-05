@@ -29,9 +29,6 @@ Used in conjunction with the [`express-session`](https://www.npmjs.com/package/e
 
 * Provides an optional `.initialize()` method if you'd like to initialize your database, collection, and stored procedures before making your first request, allowing you to check for errors before making other requests (otherwise the database will be initialized on the first request).
 
-## Status
-Code is stable and passes all tests, and been tested in a production environment. The version will be incremented to `v1.0.0` once others have successfully implemented it in production.
-
 ## Install
 ```
 npm install --save documentdb-session
