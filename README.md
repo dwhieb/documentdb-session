@@ -36,9 +36,14 @@ npm install --save documentdb-session
 
 ## Typical Usage
 ```js
-const DocumentDBStore = require('documentdb-session');
+const DocumentDBSession = require('documentdb-session');
 const express = require('express');
 const session = require('express-session');
+
+// pass the express-session object to documentdb-session
+const DocumentDBStore = DocumentDBStore(session);
+// you could also do this when you require the module if you'd prefer, like so:
+// const DocumentDBStore = require('documentdb-session')(session);
 
 const config = {
   host: `https://mydbaccount.documents.azure.com:443/`,
@@ -65,8 +70,8 @@ Option            | Default          | Description
 `collection`      | `"sessions"` | The ID of the collection where the session data should be stored. If the collection does not exist, it will be created when the session store initializes. The collection may contain other data, or it may be a dedicated collection just for sessions.
 `database`        | `"sessionstore"` | The ID of the database where the session data should be stored. If the database does not exist, it will be creaed when the session store initializes.
 `discriminator`   | `{ type: "session" }` | By default, `documentdb-session` sets a `"type"` attribute on each session document with a value of `"session"`, to distinguish session documents from other documents in the collection. If you would like a different attribute or value to be used to discriminate session documents from other documents, enter that as an attribute-value pair in an object here, e.g. `{ site: "mysite.com" }` or `{ _type: "session" }`.
-`host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`. You can also provide this in an environment variable, (`DOCUMENTDB_URL`) instead.
-`key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists. You can also provide this in an environment variable (`DOCUMENTDB_KEY`) instead.
+`host` (required) | none | The URL / hostname of your DocumentDB database account, usually of the form `https://mydbaccount.documents.azure.com:443/`. You can also provide this in an environment variable, (`DOCUMENTDB_URL`) instead.
+`key` (required)  | none | The primary key for your DocumentDB account. A primary key is required because `documentdb-session` may create a new database for your account, if none exists. You can also provide this in an environment variable (`DOCUMENTDB_KEY`) instead.
 `ttl`             | none | The TTL (time-to-live or expiration time) for your sessions, in seconds. After this time has elapsed since the last change to the session data, the session will be deleted. A session's TTL is extended each time session data is changed, restarting the timer. See more on [**Configuring TTL**](https://github.com/dwhieb/documentdb-session#configuring-ttl-time-to-live-or-expiration-time) below. *Enabling TTL is strongly recommended.*
 
 **NB:** If you'd like to more fully customize the settings for the collection where your session data is stored (e.g. the connection policy and consistency level), you can create the collection in advance, and simply provide the ID of that collection in the `collection` config parameter. `documentdb-session` will then use that collection's settings.
@@ -119,41 +124,50 @@ store.client.partitionResolvers[databaseLink] = resolver;
 ## API
 `documentdb-session` follows the [specification for session stores](https://github.com/expressjs/session#session-store-implementation) given by `express-session`. It includes all required, recommended, and optional methods, as well as a few extra convenience methods.
 
-### DocumentDBStore
-The `DocumentDBStore` object exposed by `documentdb-session` is used to create a new instance of a session store. This may then be passed to `express-session`. See the [Typical Usage](https://github.com/dwhieb/documentdb-session#typical-usage) above for an example.
+### DocumentDBSession
+The `DocumentDBSession` method is exposed by requiring `documentdb-session`. Calling this function and passing it the `express-session` instance will return the [DocumentDBStore constructor](https://github.com/dwhieb/documentdb-session#documentdbstore). Example use:
 
-### .client
+```js
+const session = require('express-session');
+const DocumentDBStore = require('documentdb-session')(session);
+const store = new DocumentDBStore({ /* config options */ });
+```
+
+### DocumentDBStore
+The `DocumentDBStore` constructor exposed by `documentdb-session` is used to create a new instance of a session `store` object. Calling this function and passing it an object with config options will return the new DocumentDB store object. This may then be passed to `express-session`. See the [Typical Usage](https://github.com/dwhieb/documentdb-session#typical-usage) and [DocumentDBSession](https://github.com/dwhieb/documentdb-session#documentdbsession) sections above for examples.
+
+### store.client
 The DocumentDB DocumentClient object from the Node.js SDK (complete documentation [here](http://azure.github.io/azure-documentdb-node/DocumentClient.html)). This provides complete access to the DocumentDB API and all its methods, and can be used to customize collection settings, or make other database calls independent of storing session data.
 
-### .all(cb)
+### store.all(cb)
 Retrieves all sessions from the collection, by filtering on the session discriminator (usually `"type": "session"`).
 
 ```js
 callback(err, sessions = [])
 ```
 
-### .clear(cb)
+### store.clear(cb)
 Deletes all sessions from the collection. Callback is fired once the collection is cleared of all sessions. Other documents in the collection that are not sessions are not affected. This operation uses a stored procedure called `clear`, which is uploaded to the collection on initialization.
 
 ```js
 callback(err)
 ```
 
-### .destroy(sid, cb)
+### store.destroy(sid, cb)
 Deletes a session with the given session ID (`sid`). Callback is fired once the document is deleted.
 
 ```js
 callback(err)
 ```
 
-### .get(sid, cb)
+### store.get(sid, cb)
 Retrieves a session from the collection using the given session ID (`sid`). The session is returned as an object, and includes its administrative database properties (e.g. `_RID`, `_ETAG`). If the session is not found, the `session` object will be set to `null`.
 
 ```js
 callback(err, session)
 ```
 
-### .initialize(cb)
+### store.initialize(cb)
 Normally, `documentdb-session` will check for a DocumentDB database and collection the first time a request to the database is made, and will create them if they do not exist. It will also upload a few stored procedures to the collection. If you would like to initialize the database before you start making database calls, you can do so by calling `.initialize()`. This is useful if you want your application to check for database configuration errors before attempting to write sessions, and for testing.
 
 ```js
@@ -174,21 +188,21 @@ store.initialize((err, db) => {
 });
 ```
 
-### .length(cb)
+### store.length(cb)
 Retrieves a count of the number of sessions in the collection, filtering on the session discriminator (usually `"type": "session"`). This operation uses a stored procedure called `length`, which is uploaded to the collection on initialization.
 
 ```js
 callback(err, len)
 ```
 
-### .set(sid, session, cb)
+### store.set(sid, session, cb)
 Upserts the session into the collection given a session ID (`sid`) and session object (`session`). The callback fires once the session has been added to the collection.
 
 ```js
 callback(err)
 ```
 
-### .touch(sid, session, cb)
+### store.touch(sid, session, cb)
 Resets the TTL (time-to-live) for the session (see the [`ttl` config option](https://github.com/dwhieb/documentdb-session#config-options) above). The callback fires onces the document has been updated. This operation works by updating the `lastActive` field on the document.
 
 ```js
