@@ -25,6 +25,10 @@ const defaultCallback = err => {
 
 module.exports = expressSession => {
 
+  if (!expressSession) {
+    throw new Error('documentdb-session must be called by passing it the express-session object.');
+  }
+
   /* A class representing a DocumentDBStore */
   class DocumentDBStore extends expressSession.Store {
     /**
