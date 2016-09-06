@@ -5,7 +5,10 @@
   max-statements
 */
 const documentdb = require('documentdb');
-const DocumentDBStore = require('../documentdb-session');
+const documentdbSession = require('../documentdb-session');
+const session = require('express-session');
+
+const DocumentDBStore = documentdbSession(session);
 
 const database = 'sessionstore';
 const collection = 'sessions';
@@ -14,10 +17,6 @@ const collectionLink = `${databaseLink}/colls/${collection}`;
 const host = process.env.DOCUMENTDB_URL;
 const key = process.env.DOCUMENTDB_KEY;
 const ttl = 15;
-
-if (!host) throw new Error('The `host` config variable is required. Please include it in the `host` property of the config object, or in the `DOCUMENTDB_URL` environment variable.');
-
-if (!key) throw new Error('The `key` config variable is required. Please include it in the `key` property of the config object, or in the `DOCUMENTDB_KEY` environment variable.');
 
 const db = new documentdb.DocumentClient(host, { masterKey: key });
 
@@ -78,6 +77,21 @@ describe('DocumentDBStore', function spec() {
     });
   });
   */
+
+  it('requires the express-session object', function requireExpressSession() {
+
+    let err;
+
+    try {
+      documentdbSession();
+    } catch (e) {
+      err = e;
+      expect(err).toBeDefined();
+    }
+
+    if (!err) fail('Should have thrown an error when express-session was omitted.');
+
+  });
 
   it('.initialize()', function initialize(done) {
     expect(this.store.client).toBeDefined();
