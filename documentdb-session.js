@@ -23,7 +23,7 @@ const defaultCallback = err => {
   throw new Error(err);
 };
 
-module.exports = expressSession => {
+const DocumentDBSession = expressSession => {
 
   if (!expressSession) {
     throw new Error('documentdb-session must be called by passing it the express-session object.');
@@ -442,3 +442,5 @@ module.exports = expressSession => {
   return DocumentDBStore;
 
 };
+
+module.exports = DocumentDBSession;
