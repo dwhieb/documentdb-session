@@ -2,7 +2,7 @@
 [![npm](https://img.shields.io/npm/v/documentdb-session.svg?maxAge=2592000)]()
 [![npm](https://img.shields.io/npm/dm/documentdb-session.svg?maxAge=2592000)]()
 [![Build Status](https://travis-ci.org/dwhieb/documentdb-session.svg?branch=master)](https://travis-ci.org/dwhieb/documentdb-session)
-[![Dependencies Status](https://david-dm.org/dwhieb/documentdb-session.svg)](https://travis-ci.org/dwhieb/documentdb-session)
+[![David](https://img.shields.io/david/dwhieb/documentdb-session.svg?maxAge=2592000)]()
 [![GitHub issues](https://img.shields.io/github/issues/dwhieb/documentdb-session.svg)](https://github.com/dwhieb/documentdb-session/issues)
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/dwhieb/documentdb-session/master/LICENSE)
 
