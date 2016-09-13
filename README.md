@@ -1,5 +1,5 @@
 # documentdb-session
-[![npm version](https://badge.fury.io/js/documentdb-session.svg)](https://badge.fury.io/js/documentdb-session)
+[![npm](https://img.shields.io/npm/v/documentdb-session.svg?maxAge=2592000)]()
 [![npm](https://img.shields.io/npm/dm/documentdb-session.svg?maxAge=2592000)]()
 [![Build Status](https://travis-ci.org/dwhieb/documentdb-session.svg?branch=master)](https://travis-ci.org/dwhieb/documentdb-session)
 [![Dependencies Status](https://david-dm.org/dwhieb/documentdb-session.svg)](https://travis-ci.org/dwhieb/documentdb-session)
