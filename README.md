@@ -41,8 +41,9 @@ const express = require('express');
 const session = require('express-session');
 
 // pass the express-session object to documentdb-session
-const DocumentDBStore = DocumentDBStore(session);
-// you could also do this when you require the module if you'd prefer, like so:
+const DocumentDBStore = DocumentDBSession(session);
+
+// you could pass the express-session object when you require the module if you'd prefer:
 // const DocumentDBStore = require('documentdb-session')(session);
 
 const config = {
