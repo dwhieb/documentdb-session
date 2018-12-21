@@ -73,7 +73,7 @@ const DocumentDBSession = expressSession => {
       };
 
       // create a new DocumentDB client and assign it to Store.client
-      let connectionOptions = new documentdb.DocumentBase.connectionOptions();
+      let connectionOptions = new documentdb.DocumentBase.ConnectionPolicy();
       connectionOptions.ProxyUrl = this.proxyUrl
       this.client = new documentdb.DocumentClient(this.host, { masterKey: this.key }, connectionOptions);
 
