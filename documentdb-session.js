@@ -12,6 +12,7 @@ const defaults = {
   host:           process.env.DOCUMENTDB_URL,
   key:            process.env.DOCUMENTDB_KEY,
   ttl:            null,
+  proxyUrl:       null,
 };
 
 /**
@@ -72,7 +73,9 @@ const DocumentDBSession = expressSession => {
       };
 
       // create a new DocumentDB client and assign it to Store.client
-      this.client = new documentdb.DocumentClient(this.host, { masterKey: this.key });
+      let connectionOptions = new documentdb.DocumentBase.ConnectionPolicy();
+      connectionOptions.ProxyUrl = this.proxyUrl
+      this.client = new documentdb.DocumentClient(this.host, { masterKey: this.key }, connectionOptions);
 
     }
 
