@@ -11,6 +11,10 @@
 
 An Azure DocumentDB store for `express-session`.
 
+## Deprecation Notice
+
+Microsoft Azure has deprecated the [`documentdb`](https://www.npmjs.com/package/documentdb) library upon which this package depends, and rebranded DocumentDB as CosmosDB, making the name of this current package (`documentdb-session`) obsolete. Rather than update this package to use the new CosmosDB SDK, this package has simply been deprecated.
+
 ## Overview
 Used in conjunction with the [`express-session`](https://www.npmjs.com/package/express-session) package, `documentdb-session` saves and retrieves your session data (`req.session`) to and from [DocumentDB](https://azure.microsoft.com/en-us/services/documentdb/), Microsoft Azure's NoSQL database service.
 
